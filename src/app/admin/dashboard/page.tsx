@@ -31,10 +31,18 @@ export default async function AdminPage() {
     headers: await headers(),
   });
 
-  // This should never happen due to layout validation, but safety check
-  if (!session?.user || session.user.role !== 'admin') {
+  // This should never happen due to middleware validation, but safety check
+  if (!session?.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) {
     return <div>Access denied</div>;
   }
+
+  // Filter data based on user's country (unless they're a super_admin)
+  let filteredData = data;
+  if (session.user.role === 'admin' && session.user.country) {
+    // Regular admins only see data from their country
+    filteredData = data.filter((item: any) => item.country === session.user.country);
+  }
+  // Super admins see all data
 
   return (
     <SidebarProvider
@@ -47,7 +55,7 @@ export default async function AdminPage() {
     >
       <AppSidebar variant="inset" />
       <SidebarInset>
-        <AdminSiteHeader user={session.user} />
+        <AdminSiteHeader user={{ name: session.user.name, email: session.user.email, image: session.user.image }} />
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2">
             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
@@ -55,7 +63,7 @@ export default async function AdminPage() {
               <div className="px-4 lg:px-6">
                 <ChartAreaInteractive />
               </div>
-              <DataTable data={data} />
+              <DataTable data={filteredData} userRole={session.user.role} userCountry={session.user.country} />
             </div>
           </div>
         </div>

@@ -17,6 +17,9 @@ import { authClient } from "@/lib/auth/auth-client"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { User, LogOut, Settings } from "lucide-react"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { AdminBreadcrumb } from "@/components/admin-breadcrumb"
+import { NotificationBell } from "@/components/notifications/notification-bell"
 
 interface AdminSiteHeaderProps {
   user: {
@@ -60,9 +63,13 @@ export function AdminSiteHeader({ user }: AdminSiteHeaderProps) {
           orientation="vertical"
           className="mx-2 data-[orientation=vertical]:h-4"
         />
-        <h1 className="text-base font-medium">Admin Dashboard</h1>
+        <AdminBreadcrumb />
         
         <div className="ml-auto flex items-center gap-2">
+          <ThemeToggle />
+          <div id="notification-bell">
+            <NotificationBell />
+          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -82,9 +89,11 @@ export function AdminSiteHeader({ user }: AdminSiteHeaderProps) {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer">
-                <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
+              <DropdownMenuItem className="cursor-pointer" asChild>
+                <a href="/admin/profile">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </a>
               </DropdownMenuItem>
               <DropdownMenuItem className="cursor-pointer">
                 <Settings className="mr-2 h-4 w-4" />

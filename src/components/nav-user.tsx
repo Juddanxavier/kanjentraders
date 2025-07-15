@@ -84,10 +84,12 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <a href="/admin/profile">
                 <IconUserCircle />
-                Account
-              </DropdownMenuItem>
+                Profile
+              </a>
+            </DropdownMenuItem>
               <DropdownMenuItem>
                 <IconCreditCard />
                 Billing

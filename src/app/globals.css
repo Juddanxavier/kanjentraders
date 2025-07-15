@@ -1,5 +1,7 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+/** @format */
+
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -118,5 +120,131 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Admin Theme Enhancements */
+  .admin-layout {
+    @apply min-h-screen bg-background;
+  }
+
+  .admin-header {
+    @apply border-b bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/60;
+  }
+
+  .admin-content {
+    @apply flex-1 overflow-auto;
+  }
+
+  .admin-page-header {
+    @apply space-y-2;
+  }
+
+  .admin-page-title {
+    @apply text-3xl font-bold tracking-tight;
+  }
+
+  .admin-page-description {
+    @apply text-muted-foreground;
+  }
+
+  .admin-card {
+    @apply rounded-lg border bg-card text-card-foreground shadow-sm;
+  }
+
+  .admin-card-header {
+    @apply flex flex-col space-y-1.5 p-6;
+  }
+
+  .admin-card-title {
+    @apply text-2xl font-semibold leading-none tracking-tight;
+  }
+
+  .admin-card-description {
+    @apply text-sm text-muted-foreground;
+  }
+
+  .admin-card-content {
+    @apply p-6 pt-0;
+  }
+
+  .admin-stats-grid {
+    @apply grid gap-4 md:grid-cols-2 lg:grid-cols-4;
+  }
+
+  .admin-stat-card {
+    @apply rounded-lg border bg-card p-6 text-card-foreground shadow-sm;
+  }
+
+  .admin-stat-label {
+    @apply text-sm font-medium text-muted-foreground;
+  }
+
+  .admin-stat-value {
+    @apply text-2xl font-bold;
+  }
+
+  .admin-stat-description {
+    @apply text-xs text-muted-foreground;
+  }
+
+  /* Data Table Enhancements */
+  .admin-table {
+    @apply w-full border-collapse;
+  }
+
+  .admin-table-header {
+    @apply border-b bg-muted/50;
+  }
+
+  .admin-table-row {
+    @apply border-b transition-colors hover:bg-muted/50;
+  }
+
+  .admin-table-cell {
+    @apply p-4 align-middle;
+  }
+
+  /* Status Badge Colors */
+  .status-badge-new {
+    @apply text-muted-foreground border-muted-foreground/50 bg-transparent border-dashed border-2;
+    border-style: dashed;
+  }
+
+  .status-badge-contacted {
+    @apply text-muted-foreground border-muted-foreground/50 bg-transparent border-dashed;
+    border-style: dashed;
+  }
+
+  .status-badge-shipped {
+    @apply text-muted-foreground border-muted-foreground/50 bg-transparent border-dashed;
+    border-style: dashed;
+  }
+
+  .status-badge-failed {
+    @apply text-muted-foreground border-muted-foreground/50 bg-transparent border-dashed;
+    border-style: dashed;
+  }
+
+  /* Legacy classes for backward compatibility */
+  .dashboard-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .dashboard-nav-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+  .dashboard-user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .admin-link {
+    @apply text-primary hover:underline;
   }
 }

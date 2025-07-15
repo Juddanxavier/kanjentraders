@@ -15,6 +15,7 @@ import {
   IconHelp,
   IconInnerShadowTop,
   IconListDetails,
+  IconNotification,
   IconReport,
   IconSearch,
   IconSettings,
@@ -66,6 +67,11 @@ const data = {
       title: 'Team',
       url: '#',
       icon: IconUsers,
+    },
+    {
+      title: 'Notifications',
+      url: '/notifications',
+      icon: IconNotification,
     },
   ],
   navClouds: [

@@ -23,6 +23,8 @@ export default function SignupForm() {
     email: '',
     password: '',
     confirmPassword: '',
+    country: 'India',
+    phoneNumber: '',
     agreeToTerms: false,
   });
 
@@ -66,6 +68,14 @@ export default function SignupForm() {
         errors.confirmPassword = 'Passwords do not match';
       }
     }
+    
+    // Phone number validation
+    if (touched.phoneNumber && formData.phoneNumber) {
+      const phoneRegex = /^\+?[1-9]\d{1,14}$/; // E.164 format
+      if (!phoneRegex.test(formData.phoneNumber.replace(/\s/g, ''))) {
+        errors.phoneNumber = 'Please enter a valid phone number with country code (e.g., +919876543210)';
+      }
+    }
 
     setValidationErrors(errors);
   }, [formData, touched]);
@@ -86,6 +96,8 @@ export default function SignupForm() {
       formData.confirmPassword.trim() &&
       formData.password === formData.confirmPassword &&
       formData.agreeToTerms &&
+      formData.phoneNumber.trim() &&
+      formData.country &&
       Object.keys(validationErrors).length === 0
     );
   };
@@ -94,17 +106,20 @@ export default function SignupForm() {
     e.preventDefault();
     if (!isFormValid()) return;
     setPending(true);
-    const formData = new FormData(e.target as HTMLFormElement);
-    const { email, password, name } = Object.fromEntries(formData);
+    
     try {
       const { error: authError } = await authClient.signUp.email({
-        email: email as string,
-        password: password as string,
-        name: name as string,
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+        country: formData.country,
+        phoneNumber: formData.phoneNumber,
       });
+      
       if (authError) {
         throw new Error(authError.message);
       }
+      
       toast.success('Account created successfully');
       router.push('/signin');
     } catch (error) {
@@ -273,7 +288,58 @@ export default function SignupForm() {
               )}
             </div>
 
-            {/* Terms Agreement */}
+            {/* Phone Number Field */}
+            <div className='space-y-2'>
+              <Label htmlFor='phoneNumber' className='block text-sm'>
+                Phone Number
+              </Label>
+              <Input
+                type='tel'
+                required
+                name='phoneNumber'
+                id='phoneNumber'
+                value={formData.phoneNumber}
+                onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                onBlur={() => handleBlur('phoneNumber')}
+                className={cn(
+                  'input sz-md variant-mixed',
+                  validationErrors.phoneNumber ? 'border-red-500' : ''
+                )}
+                placeholder={formData.country === 'India' ? '+91 9876543210' : '+94 771234567'}
+              />
+              {validationErrors.phoneNumber && (
+                <p className='text-red-500 text-xs mt-1'>
+                  {validationErrors.phoneNumber}
+                </p>
+              )}
+            </div>
+
+            {/* Country Selection Field */}
+            <div className='space-y-2'>
+              <Label htmlFor='country' className='block text-sm'>
+                Country
+              </Label>
+              <select
+                name='country'
+                id='country'
+                required
+                value={formData.country}
+                onChange={(e) => handleInputChange('country', e.target.value)}
+                onBlur={() => handleBlur('country')}
+                className={cn(
+                  'input sz-md variant-mixed',
+                  validationErrors.country ? 'border-red-500' : ''
+                )}
+              >
+                <option value='India'>India</option>
+                <option value='Sri Lanka'>Sri Lanka</option>
+              </select>
+              {validationErrors.country && (
+                <p className='text-red-500 text-xs mt-1'>
+                  {validationErrors.country}
+                </p>
+              )}
+            </div>
             <div className='flex items-start space-x-2'>
               <input
                 type='checkbox'

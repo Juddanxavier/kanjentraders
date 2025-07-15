@@ -1,7 +1,7 @@
 /** @format */
 
-import SigninForm from '@/components/auth/signin-form';
+import SigninFormWithPhone from '@/components/auth/signin-form-with-phone';
 
 export default function LoginPage() {
-  return <SigninForm />;
+  return <SigninFormWithPhone />;
 }

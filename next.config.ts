@@ -1,4 +1,9 @@
+import { loadEnvConfig } from '@next/env';
 import type { NextConfig } from "next";
+
+// Load environment variables based on NODE_ENV
+const projectDir = process.cwd();
+loadEnvConfig(projectDir);
 
 const nextConfig: NextConfig = {
   // Enhanced security headers
@@ -60,21 +65,38 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60,
   },
 
-  // Bundle analyzer (enable only when needed)
-  // webpack: (config, { dev, isServer }) => {
-  //   if (!dev && !isServer) {
-  //     config.plugins.push(
-  //       new (require('@next/bundle-analyzer'))({
-  //         enabled: process.env.ANALYZE === 'true',
-  //       })
-  //     );
-  //   }
-  //   return config;
-  // },
+  // Webpack configuration
+  webpack: (config, { dev, isServer }) => {
+    // React 19 compatibility for better-auth
+    config.resolve = config.resolve || {};
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'react/jsx-runtime': require.resolve('react/jsx-runtime'),
+      'react/jsx-dev-runtime': require.resolve('react/jsx-dev-runtime'),
+    };
+    
+    // Bundle analyzer (enable only when needed)
+    // if (!dev && !isServer) {
+    //   config.plugins.push(
+    //     new (require('@next/bundle-analyzer'))({
+    //       enabled: process.env.ANALYZE === 'true',
+    //     })
+    //   );
+    // }
+    
+    return config;
+  },
 
-  // Environment validation
+  // Environment variables - make them available to the app
   env: {
-    CUSTOM_KEY: process.env.CUSTOM_KEY,
+    DATABASE_URL: process.env.DATABASE_URL,
+    SHIPPO_API_KEY: process.env.SHIPPO_API_KEY,
+    BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
+    BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
+    TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,
+    TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN,
+    TWILIO_PHONE_NUMBER: process.env.TWILIO_PHONE_NUMBER,
+    REDIS_URL: process.env.REDIS_URL,
   },
 
   // Compression

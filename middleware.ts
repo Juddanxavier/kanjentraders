@@ -1,34 +1,26 @@
 /** @format */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from './src/lib/auth/auth';
 import {
   isPublicRoute,
   isUserProtectedRoute,
   isAdminRoute,
   isApiExcludedRoute,
   getSigninRedirectUrl,
-  hasValidSessionCookie,
   SECURITY_HEADERS,
+  SESSION_COOKIE_NAME,
 } from './src/lib/auth/route-utils';
 
 /**
- * FINAL, CONSISTENT, AND SECURE MIDDLEWARE
+ * Cookie-based middleware without database calls
  * 
- * This middleware provides a centralized and consistent security model.
- * 
- * Security Strategy:
- * 1. Exclude API/static routes & allow public routes.
- * 2. For all other routes, perform a full session check.
- * 3. Based on the session, check permissions for the requested route.
+ * This middleware uses a fast cookie check for initial routing decisions.
+ * Full session validation happens in page layouts.
  */
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const response = NextResponse.next();
-
-  console.log('\n=== MIDDLEWARE START ===');
-  console.log('🔍 Processing:', pathname);
 
   // Apply security headers to all responses
   Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
@@ -37,90 +29,34 @@ export async function middleware(request: NextRequest) {
 
   // Skip checks for API/static files
   if (isApiExcludedRoute(pathname) || pathname.startsWith('/_next')) {
-    console.log('⏭️  Skipping API/static route');
-    console.log('=== MIDDLEWARE END ===\n');
     return response;
   }
 
   // Allow public routes
   if (isPublicRoute(pathname)) {
-    console.log('🌐 Public route allowed');
-    console.log('=== MIDDLEWARE END ===\n');
     return response;
   }
 
-  // For all protected routes, we need a session.
-  try {
-    console.log('🔐 Checking session...');
-    const session = await auth.api.getSession({ headers: request.headers });
-
-    // If no valid session, redirect to signin
-    if (!session?.user) {
-      console.log('❌ No valid session found');
-      const redirectUrl = getSigninRedirectUrl(pathname);
-      console.log('↪️  Redirecting to:', redirectUrl);
-      console.log('=== MIDDLEWARE END ===\n');
-      return NextResponse.redirect(new URL(redirectUrl, request.url));
+  // For protected routes, check if session cookie exists
+  const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
+  
+  if (!sessionCookie) {
+    // Check if it's an admin route that needs special handling
+    if (isAdminRoute(pathname)) {
+      const signinUrl = new URL('/signin', request.url);
+      signinUrl.searchParams.set('error', 'unauthorized');
+      signinUrl.searchParams.set('callbackUrl', pathname);
+      return NextResponse.redirect(signinUrl);
     }
     
-    // --- Authorization Checks ---
-    const isBanned = session.user.banned;
-    const isAdmin = session.user.role === 'admin';
-    const userRole = session.user.role || 'no role';
-
-    console.log('👤 User Info:', {
-      userId: session.user.id,
-      email: session.user.email,
-      role: userRole,
-      isAdmin: isAdmin,
-      isBanned: isBanned
-    });
-
-    // Block banned users
-    if (isBanned) {
-        console.log('🚫 User is banned');
-        console.log('=== MIDDLEWARE END ===\n');
-        return NextResponse.redirect(new URL('/signin?error=account_banned', request.url));
-    }
-
-    // Redirect /admin to /admin/dashboard for consistency
-    if (pathname === '/admin') {
-      console.log('↪️  Redirecting /admin to /admin/dashboard');
-      console.log('=== MIDDLEWARE END ===\n');
-      return NextResponse.redirect(new URL('/admin/dashboard', request.url));
-    }
-
-    // ADMIN ROUTE: Requires 'admin' role
-    if (isAdminRoute(pathname)) {
-      console.log('🔒 Admin route detected');
-      if (!isAdmin) {
-        console.log('❌ User is not admin, redirecting to dashboard');
-        // User is not an admin, redirect to their dashboard
-        const dashboardUrl = new URL('/dashboard', request.url);
-        dashboardUrl.searchParams.set('error', 'unauthorized');
-        console.log('↪️  Redirecting to:', dashboardUrl.toString());
-        console.log('=== MIDDLEWARE END ===\n');
-        return NextResponse.redirect(dashboardUrl);
-      }
-      console.log('✅ Admin access granted');
-    }
-
-    // USER ROUTE: Any valid user (including admins) can access.
-    // No extra check is needed here since we've already verified the session.
-    if (isUserProtectedRoute(pathname)) {
-        console.log('👥 User route detected, access granted');
-    }
-
-    // All checks passed, allow access
-    console.log('✅ All checks passed, allowing access');
-    console.log('=== MIDDLEWARE END ===\n');
-    return response;
-
-  } catch (error) {
-    console.error('❌ Middleware session error:', error);
-    console.log('=== MIDDLEWARE END (ERROR) ===\n');
-    return NextResponse.redirect(new URL('/signin?error=session_error', request.url));
+    // Regular protected route
+    const redirectUrl = getSigninRedirectUrl(pathname);
+    return NextResponse.redirect(new URL(redirectUrl, request.url));
   }
+
+  // Cookie exists, allow access
+  // Full session validation and role checking will happen in the page layout
+  return response;
 }
 
 // Apply middleware to all routes except static assets

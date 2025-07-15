@@ -26,28 +26,26 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { authClient } from '@/lib/auth/auth-client';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+
 export function NavUser() {
   const { isMobile } = useSidebar();
   const router = useRouter();
-  const { data: session } = authClient.useSession();
+  const { user, signOut } = useAuth();
   const [pending, setPending] = useState(false);
-  if (pending) {
+  
+  if (pending || !user) {
     return null;
   }
-  const user = session?.user;
+  
   const handleSignout = async () => {
     try {
       setPending(true);
-      await authClient.signOut({
-        fetchOptions: {
-          onSuccess: () => {
-            router.push('/signin');
-          },
-        },
-      });
+      await signOut();
+      // Let better-auth handle the redirect after sign out
+      router.push('/signin');
     } catch (error) {
       console.error('Error signing out:', error);
     } finally {
@@ -128,7 +126,7 @@ export function NavUser() {
                 <IconCreditCard />
                 Billing
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push('/notifications')}>
                 <IconNotification />
                 Notifications
               </DropdownMenuItem>

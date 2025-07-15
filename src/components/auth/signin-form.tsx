@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth/auth-client';
+import { getClientSession, getRoleBasedRedirectPath } from '@/lib/services/sessionService.client';
 
 export default function SigninForm() {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -69,15 +70,10 @@ export default function SigninForm() {
       }
       toast.success('Signed in successfully');
 
-      // Fetch the user session to determine role
-      const session = await authClient.getSession();
-      const isAdmin = session?.user?.role === 'admin';
-
-      if (isAdmin) {
-        router.push('/admin/dashboard');
-      } else {
-        router.push('/dashboard');
-      }
+      // Get session and redirect based on role
+      const sessionData = await getClientSession();
+      const redirectPath = getRoleBasedRedirectPath(sessionData?.user.role || null);
+      router.push(redirectPath);
     } catch {
       setErrors((prev) => ({ ...prev, form: 'An unexpected error occurred' }));
       toast.error('An unexpected error occurred');

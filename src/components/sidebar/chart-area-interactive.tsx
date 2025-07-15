@@ -1,9 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
+import { IconTrendingUp, IconDeviceDesktop, IconDeviceMobile } from "@tabler/icons-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
+import { Badge } from "@/components/ui/badge"
 import {
   Card,
   CardAction,
@@ -12,12 +13,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart"
 import {
   Select,
   SelectContent,
@@ -126,19 +121,25 @@ const chartData = [
   { date: "2024-06-30", desktop: 446, mobile: 400 },
 ]
 
-const chartConfig = {
-  visitors: {
-    label: "Visitors",
-  },
-  desktop: {
-    label: "Desktop",
-    color: "var(--primary)",
-  },
-  mobile: {
-    label: "Mobile",
-    color: "var(--primary)",
-  },
-} satisfies ChartConfig
+// Calculate summary metrics
+function calculateMetrics(data: typeof chartData) {
+  const totalDesktop = data.reduce((sum, item) => sum + item.desktop, 0)
+  const totalMobile = data.reduce((sum, item) => sum + item.mobile, 0)
+  const total = totalDesktop + totalMobile
+  const desktopPercentage = total > 0 ? (totalDesktop / total) * 100 : 0
+  const mobilePercentage = total > 0 ? (totalMobile / total) * 100 : 0
+  const averageDaily = data.length > 0 ? total / data.length : 0
+  
+  return {
+    total,
+    totalDesktop,
+    totalMobile,
+    desktopPercentage,
+    mobilePercentage,
+    averageDaily,
+    dataPoints: data.length
+  }
+}
 
 export function ChartAreaInteractive() {
   const isMobile = useIsMobile()
@@ -209,83 +210,49 @@ export function ChartAreaInteractive() {
         </CardAction>
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-        <ChartContainer
-          config={chartConfig}
-          className="aspect-auto h-[250px] w-full"
-        >
-          <AreaChart data={filteredData}>
-            <defs>
-              <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--color-desktop)"
-                  stopOpacity={1.0}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="var(--color-desktop)"
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-              <linearGradient id="fillMobile" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--color-mobile)"
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="var(--color-mobile)"
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-            </defs>
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="date"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              minTickGap={32}
-              tickFormatter={(value) => {
-                const date = new Date(value)
-                return date.toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                })
-              }}
-            />
-            <ChartTooltip
-              cursor={false}
-              defaultIndex={isMobile ? -1 : 10}
-              content={
-                <ChartTooltipContent
-                  labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })
-                  }}
-                  indicator="dot"
-                />
-              }
-            />
-            <Area
-              dataKey="mobile"
-              type="natural"
-              fill="url(#fillMobile)"
-              stroke="var(--color-mobile)"
-              stackId="a"
-            />
-            <Area
-              dataKey="desktop"
-              type="natural"
-              fill="url(#fillDesktop)"
-              stroke="var(--color-desktop)"
-              stackId="a"
-            />
-          </AreaChart>
-        </ChartContainer>
+        {/* Render summary metrics */}
+        {(() => {
+          const {
+            total,
+            totalDesktop,
+            totalMobile,
+            desktopPercentage,
+            mobilePercentage,
+            averageDaily,
+            dataPoints,
+          } = calculateMetrics(filteredData)
+
+          return (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="p-3 bg-gray-50 rounded-lg border shadow-sm">
+                <div className="flex items-center gap-2">
+                  <IconTrendingUp className="text-blue-600" />
+                  <span className="text-xl font-semibold">{total.toLocaleString()}</span>
+                </div>
+                <p className="text-xs text-gray-500">Total Visitors</p>
+                <Badge variant="outline" className="mt-1">{dataPoints} Data Points</Badge>
+              </div>
+
+              <div className="p-3 bg-gray-50 rounded-lg border shadow-sm">
+                <div className="flex items-center gap-2">
+                  <IconDeviceDesktop className="text-green-600" />
+                  <span className="text-xl font-semibold">{totalDesktop.toLocaleString()}</span>
+                </div>
+                <p className="text-xs text-gray-500">Desktop ({desktopPercentage.toFixed(1)}%)</p>
+                <Badge variant="outline" className="mt-1">Primary Platform</Badge>
+              </div>
+
+              <div className="p-3 bg-gray-50 rounded-lg border shadow-sm">
+                <div className="flex items-center gap-2">
+                  <IconDeviceMobile className="text-orange-600" />
+                  <span className="text-xl font-semibold">{totalMobile.toLocaleString()}</span>
+                </div>
+                <p className="text-xs text-gray-500">Mobile ({mobilePercentage.toFixed(1)}%)</p>
+                <Badge variant="outline" className="mt-1">Growing Platform</Badge>
+              </div>
+            </div>
+          )
+        })()}
       </CardContent>
     </Card>
   )

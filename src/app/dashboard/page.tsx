@@ -1,8 +1,8 @@
 /** @format */
 
-import { headers } from 'next/headers';
-import { auth } from '@/lib/auth/auth';
 import { LogoutButton } from '@/components/auth/logout-button';
+import { getServerSession } from '@/lib/services/sessionService';
+import { UserAnalyticsCard } from '@/components/analytics/user-analytics-card';
 
 /**
  * USER DASHBOARD PAGE
@@ -13,14 +13,14 @@ import { LogoutButton } from '@/components/auth/logout-button';
 
 export default async function DashboardPage() {
   // Get session for user info (already validated in layout)
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const sessionData = await getServerSession();
 
   // This should never happen due to layout validation, but safety check
-  if (!session?.user) {
+  if (!sessionData) {
     return <div>Access denied</div>;
   }
+  
+  const { user } = sessionData;
 
   return (
     <div className="dashboard-page">
@@ -41,10 +41,10 @@ export default async function DashboardPage() {
         <div className="dashboard-card">
           <h2>Profile Information</h2>
           <div className="profile-info">
-            <p><strong>Name:</strong> {session.user.name || 'Not set'}</p>
-            <p><strong>Email:</strong> {session.user.email}</p>
-            <p><strong>Member since:</strong> {new Date(session.user.createdAt).toLocaleDateString()}</p>
-            <p><strong>Account type:</strong> {session.user.role || 'User'}</p>
+            <p><strong>Name:</strong> {user.name || 'Not set'}</p>
+            <p><strong>Email:</strong> {user.email}</p>
+            <p><strong>Member since:</strong> {new Date(user.createdAt).toLocaleDateString()}</p>
+            <p><strong>Account type:</strong> {user.role || 'User'}</p>
           </div>
           <button className="btn-primary">Edit Profile</button>
         </div>
@@ -67,8 +67,15 @@ export default async function DashboardPage() {
           </div>
         </div>
 
+        {/* User Analytics (if user is admin) */}
+        {user.role === 'admin' && (
+          <div className="dashboard-card col-span-full">
+            <UserAnalyticsCard />
+          </div>
+        )}
+        
         {/* Admin Access (if user is admin) */}
-        {session.user.role === 'admin' && (
+        {user.role === 'admin' && (
           <div className="dashboard-card admin-card">
             <h2>Admin Access</h2>
             <p>You have administrative privileges</p>

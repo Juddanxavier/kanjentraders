@@ -1,0 +1,69 @@
+/** @format */
+
+import { headers } from 'next/headers';
+import { auth } from '@/lib/auth/auth';
+import { redirect } from 'next/navigation';
+import { AdminSiteHeader } from '@/components/admin-site-header';
+import { AppSidebar } from '@/components/app-sidebar';
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
+import { UsersTable } from '@/components/admin/users-table';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { canManageUsers } from '@/lib/auth/permissions';
+import type { AuthUser } from '@/lib/auth/permissions';
+
+export default async function UsersPage() {
+  // Get session for admin info
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  const user = session?.user as AuthUser | null;
+
+  // Check if user can manage users
+  if (!user || !canManageUsers(user)) {
+    redirect('/dashboard');
+  }
+
+  return (
+    <SidebarProvider
+      style={
+        {
+          "--sidebar-width": "calc(var(--spacing) * 72)",
+          "--header-height": "calc(var(--spacing) * 12)",
+        } as React.CSSProperties
+      }
+    >
+      <AppSidebar variant="inset" />
+      <SidebarInset>
+        <AdminSiteHeader user={{ name: user.name, email: user.email, image: user.image }} />
+        <div className="flex flex-1 flex-col">
+          <div className="p-8">
+            {/* Header Section */}
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
+              <p className="text-muted-foreground mt-2">
+                Manage users, roles, and permissions
+              </p>
+            </div>
+
+            {/* Users Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>All Users</CardTitle>
+                <CardDescription>
+                  {user.role === 'super_admin' 
+                    ? 'View and manage users from all countries'
+                    : `View and manage users from ${user.country}`
+                  }
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <UsersTable currentUser={user} />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}

@@ -2,7 +2,7 @@
 
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth/auth';
-import { LogoutButton } from '@/components/auth/logout-button';
+import { DashboardNav } from '@/components/dashboard-nav';
 
 /**
  * USER DASHBOARD LAYOUT
@@ -25,20 +25,7 @@ export default async function DashboardLayout({
   return (
     <div className="dashboard-layout">
       {/* User Navigation */}
-      <nav className="dashboard-nav">
-        <div className="dashboard-nav-header">
-          <h1>Dashboard</h1>
-          <div className="dashboard-user-info">
-            <span>Welcome, {session?.user?.name || session?.user?.email}</span>
-            {session?.user?.role === 'admin' && (
-              <a href="/admin" className="admin-link">
-                Admin Panel
-              </a>
-            )}
-            <LogoutButton />
-          </div>
-        </div>
-      </nav>
+      <DashboardNav user={session?.user || null} />
 
       {/* User Content */}
       <main className="dashboard-content">
