@@ -1,5 +1,4 @@
 /** @format */
-
 import { AppSidebar } from "@/components/app-sidebar"
 import { AdminSiteHeader } from "@/components/admin-site-header"
 import {
@@ -12,7 +11,6 @@ import { redirect } from 'next/navigation';
 import { canManageUsers } from '@/lib/auth/permissions';
 import type { AuthUser } from '@/lib/auth/permissions';
 import LeadsManagement from '@/components/leads/leads-management';
-
 /**
  * SECURE ADMIN LEADS PAGE
  * 
@@ -23,18 +21,15 @@ import LeadsManagement from '@/components/leads/leads-management';
  * 
  * Uses shadcn dashboard template for admin panel
  */
-
 export default async function AdminLeadsPage() {
   // Get session for admin info (already validated in layout)
   const session = await auth.api.getSession({
     headers: await headers(),
   });
-
   // This should never happen due to middleware validation, but safety check
   if (!session?.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) {
     return <div>Access denied</div>;
   }
-
   return (
     <SidebarProvider
       style={
@@ -58,4 +53,3 @@ export default async function AdminLeadsPage() {
     </SidebarProvider>
   )
 }
-

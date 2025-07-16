@@ -10,12 +10,13 @@ import type { AuthUser } from '@/lib/auth/permissions';
 // PATCH /api/admin/users/[id]/edit - Update user details
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const body = await request.json();
     const { name, role, country, phoneNumber } = body;
-    const userId = params.id;
+    const userId = id;
 
     // Get session
     const session = await auth.api.getSession({

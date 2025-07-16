@@ -1,6 +1,5 @@
 // Client-side service - no Shippo imports
 // All Shippo operations should be done via API routes
-
 // Types for better type safety
 export interface ShipmentData {
   trackingNumber: string;
@@ -31,7 +30,6 @@ export interface ShipmentData {
     unit: string;
   };
 }
-
 export interface TrackingEvent {
   status: string;
   status_details?: string;
@@ -43,7 +41,6 @@ export interface TrackingEvent {
   };
   message?: string;
 }
-
 export interface ShippoTrackingResponse {
   tracking_number: string;
   carrier: string;
@@ -55,10 +52,8 @@ export interface ShippoTrackingResponse {
     token: string;
   };
 }
-
 // Server-side functions are handled by API routes
 // Client-side code should only call API endpoints
-
 /**
  * Get all carriers supported by Shippo
  */
@@ -79,7 +74,6 @@ export const getSupportedCarriers = () => {
     { code: 'hongkong_post', name: 'Hong Kong Post' },
   ];
 };
-
 /**
  * Validate tracking number format for different carriers
  */
@@ -91,12 +85,10 @@ export const validateTrackingNumber = (carrier: string, trackingNumber: string):
     'dhl_express': /^[0-9]{10,11}$/,
     'dhl_ecommerce': /^[0-9]{10,11}$/,
   };
-
   const pattern = patterns[carrier.toLowerCase()];
   if (!pattern) {
     // If no specific pattern, just check it's not empty
     return trackingNumber.length > 0;
   }
-
   return pattern.test(trackingNumber);
 };

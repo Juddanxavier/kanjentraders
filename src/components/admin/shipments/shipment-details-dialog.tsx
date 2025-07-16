@@ -1,5 +1,4 @@
 'use client';
-
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,8 +23,6 @@ import {
   ArrowRight,
   Circle
 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-
 interface TrackingEvent {
   status: string;
   status_details?: string;
@@ -37,7 +34,6 @@ interface TrackingEvent {
   };
   message?: string;
 }
-
 interface Shipment {
   id: string;
   leadId: string;
@@ -68,17 +64,13 @@ interface Shipment {
     weight: number;
   };
 }
-
 interface ShipmentDetailsDialogProps {
   shipment: Shipment;
   onClose: () => void;
 }
-
 export function ShipmentDetailsDialog({ shipment, onClose }: ShipmentDetailsDialogProps) {
   const [refreshing, setRefreshing] = useState(false);
-  const { toast } = useToast();
-  
-  // Parse tracking events from JSON string
+  const { toast } = use// Parse tracking events from JSON string
   const trackingEvents = useMemo(() => {
     if (!shipment.trackingEvents) return [];
     try {
@@ -90,46 +82,28 @@ export function ShipmentDetailsDialog({ shipment, onClose }: ShipmentDetailsDial
       return [];
     }
   }, [shipment.trackingEvents]);
-
   const handleRefreshTracking = async () => {
     setRefreshing(true);
     try {
       const response = await fetch(`/api/admin/shipments/${shipment.id}/refresh`, {
         method: 'POST',
       });
-      
       if (response.ok) {
-        toast({
-          title: 'Success',
-          description: 'Tracking information refreshed',
-        });
         // Refresh the page or update the shipment data
         window.location.reload();
       } else {
         throw new Error('Failed to refresh tracking');
       }
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to refresh tracking information',
-        variant: 'destructive',
-      });
-    } finally {
+      } finally {
       setRefreshing(false);
     }
   };
-
   const copyTrackingNumber = () => {
     navigator.clipboard.writeText(shipment.trackingNumber);
-    toast({
-      title: 'Copied',
-      description: 'Tracking number copied to clipboard',
-    });
-  };
-
+    };
   const getStatusIcon = (status: string) => {
     const normalizedStatus = status.toLowerCase();
-    
     // More specific icon mapping based on common tracking statuses
     if (normalizedStatus.includes('delivered')) {
       return <CheckCircle className="h-4 w-4 text-green-600" />;
@@ -158,11 +132,9 @@ export function ShipmentDetailsDialog({ shipment, onClose }: ShipmentDetailsDial
     if (normalizedStatus.includes('pre_transit') || normalizedStatus.includes('label created')) {
       return <Circle className="h-4 w-4 text-gray-600" />;
     }
-    
     // Default fallback
     return <Package className="h-4 w-4 text-gray-600" />;
   };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'DELIVERED':
@@ -181,24 +153,20 @@ export function ShipmentDetailsDialog({ shipment, onClose }: ShipmentDetailsDial
         return 'bg-gray-100 text-gray-800';
     }
   };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();
   };
-
   const formatLocation = (location?: { city?: string; state?: string; country?: string }) => {
     if (!location) return 'Unknown';
     const parts = [location.city, location.state, location.country].filter(Boolean);
     return parts.join(', ');
   };
-
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 mb-6">
         <Package className="h-5 w-5" />
         <h1 className="text-2xl font-semibold">Shipment Details</h1>
       </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Main Info */}
         <div className="lg:col-span-2 space-y-6">
@@ -234,11 +202,7 @@ export function ShipmentDetailsDialog({ shipment, onClose }: ShipmentDetailsDial
                       size="sm"
                       onClick={() => {
                         navigator.clipboard.writeText(shipment.whiteLabelTrackingId);
-                        toast({
-                          title: 'Copied',
-                          description: 'White label tracking ID copied to clipboard',
-                        });
-                      }}
+                        }}
                       className="h-6 w-6 p-0"
                     >
                       <Copy className="h-3 w-3" />
@@ -285,7 +249,6 @@ export function ShipmentDetailsDialog({ shipment, onClose }: ShipmentDetailsDial
                   <div className="mt-1">{shipment.serviceType || 'N/A'}</div>
                 </div>
               </div>
-
               {shipment.estimatedDelivery && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">
@@ -297,7 +260,6 @@ export function ShipmentDetailsDialog({ shipment, onClose }: ShipmentDetailsDial
                   </div>
                 </div>
               )}
-
               {shipment.actualDelivery && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">
@@ -309,7 +271,6 @@ export function ShipmentDetailsDialog({ shipment, onClose }: ShipmentDetailsDial
                   </div>
                 </div>
               )}
-
               {shipment.lastTrackedAt && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">
@@ -322,7 +283,6 @@ export function ShipmentDetailsDialog({ shipment, onClose }: ShipmentDetailsDial
               )}
             </CardContent>
           </Card>
-
           {/* Tracking Timeline */}
           <Card>
             <CardHeader>
@@ -371,7 +331,6 @@ export function ShipmentDetailsDialog({ shipment, onClose }: ShipmentDetailsDial
             </CardContent>
           </Card>
         </div>
-
         {/* Right Column - Customer & Address Info */}
         <div className="space-y-6">
           {/* Customer Info */}
@@ -403,7 +362,6 @@ export function ShipmentDetailsDialog({ shipment, onClose }: ShipmentDetailsDial
               </div>
             </CardContent>
           </Card>
-
           {/* Package Info */}
           <Card>
             <CardHeader>
@@ -427,7 +385,6 @@ export function ShipmentDetailsDialog({ shipment, onClose }: ShipmentDetailsDial
               </div>
             </CardContent>
           </Card>
-
           {/* Addresses */}
           <Card>
             <CardHeader>
@@ -450,7 +407,6 @@ export function ShipmentDetailsDialog({ shipment, onClose }: ShipmentDetailsDial
                   </div>
                 </div>
               )}
-              
               {shipment.toAddress && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">To</label>
@@ -464,7 +420,6 @@ export function ShipmentDetailsDialog({ shipment, onClose }: ShipmentDetailsDial
                   </div>
                 </div>
               )}
-
               {!shipment.fromAddress && !shipment.toAddress && (
                 <div>
                   <div className="text-sm text-muted-foreground">
@@ -475,7 +430,6 @@ export function ShipmentDetailsDialog({ shipment, onClose }: ShipmentDetailsDial
               )}
             </CardContent>
           </Card>
-
           {/* Notes */}
           {shipment.notes && (
             <Card>

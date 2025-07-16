@@ -1,14 +1,12 @@
 /** @format */
-
 'use client';
-
 import React, { useState } from 'react';
 import { useLeadStore } from '@/store/lead-store';
+import { useAuthStore } from '@/lib/store/auth-store';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from 'sonner';
 import {
   Table,
   TableBody,
@@ -34,7 +32,7 @@ import CreateLeadForm from './create-lead-form';
 import { LeadWithDetails } from '@/types/lead';
 import { LeadStatus } from '@/generated/prisma';
 import { DataTable } from '@/components/data-table';
-
+import { Pagination, usePagination } from '@/components/ui/pagination';
 // Define the lead schema for the data table
 const leadSchema = z.object({
   id: z.string(),
@@ -48,11 +46,10 @@ const leadSchema = z.object({
   createdAt: z.date(),
   updatedAt: z.date(),
 });
-
 type LeadData = z.infer<typeof leadSchema>;
-
 export default function LeadsDataTable() {
   const { leads, isLoading, error, fetchLeads, updateLead } = useLeadStore();
+  const { isAuthenticated, isLoading: authLoading, user } = useAuthStore();
   const [editingLead, setEditingLead] = useState<LeadWithDetails | null>(null);
   const [deletingLead, setDeletingLead] = useState<LeadWithDetails | null>(
     null
@@ -63,17 +60,33 @@ export default function LeadsDataTable() {
     'update' | 'delete' | null
   >(null);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [selectAllMode, setSelectAllMode] = useState<'none' | 'page' | 'all'>('none');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [originFilter, setOriginFilter] = useState<string>('all');
   const [destinationFilter, setDestinationFilter] = useState<string>('all');
-
-  // Fetch leads on component mount
+  // Pagination state using custom hook
+  const pagination = usePagination(0, 5, 1); // Will be updated with actual totalItems
+  // Fetch leads on component mount (only when authenticated)
   React.useEffect(() => {
-    fetchLeads();
-  }, [fetchLeads]);
+    if (isAuthenticated && user && !authLoading) {
+      // Only fetch if we don't have cached data or if data might be stale
+      if (leads.length === 0) {
+        fetchLeads();
+      }
+    }
+  }, [isAuthenticated, user, authLoading, leads.length, fetchLeads]);
+  // Debug logs
+  console.log('LeadsDataTable Debug:', {
+    leads: leads.length,
+    isLoading,
+    error,
+    isAuthenticated,
+    authLoading,
+    user: user?.email
+  });
 
-  // Transform leads data to match the schema
-  const tableData: LeadData[] = leads
+  // Transform and filter leads data
+  const filteredData: LeadData[] = leads
     .filter((lead) => {
       if (statusFilter && statusFilter !== 'all' && lead.status !== statusFilter) return false;
       if (originFilter && originFilter !== 'all' && lead.origin !== originFilter) return false;
@@ -93,36 +106,121 @@ export default function LeadsDataTable() {
       updatedAt: new Date(lead.updatedAt),
     }));
 
+  // Pagination calculations
+  const totalItems = filteredData.length;
+  
+  // Create a new pagination hook with correct total items
+  const paginationWithTotalItems = usePagination(totalItems, pagination.itemsPerPage, pagination.currentPage);
+  
+  // Update pagination when total items change
+  React.useEffect(() => {
+    if (paginationWithTotalItems.totalPages > 0 && paginationWithTotalItems.currentPage > paginationWithTotalItems.totalPages) {
+      paginationWithTotalItems.setCurrentPage(1);
+    }
+  }, [totalItems, paginationWithTotalItems.totalPages, paginationWithTotalItems.currentPage]);
+  
+  const totalPages = paginationWithTotalItems.totalPages;
+  const startIndex = paginationWithTotalItems.startIndex;
+  const endIndex = paginationWithTotalItems.endIndex;
+  const tableData = filteredData.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  React.useEffect(() => {
+    paginationWithTotalItems.setCurrentPage(1);
+  }, [statusFilter, originFilter, destinationFilter]);
+
+  // Clear selected rows when page changes (unless "select all" mode is active)
+  React.useEffect(() => {
+    if (selectAllMode === 'none') {
+      setSelectedRows([]);
+    }
+  }, [paginationWithTotalItems.currentPage, paginationWithTotalItems.itemsPerPage, selectAllMode]);
+  
+  // Clear selection when filters change
+  React.useEffect(() => {
+    setSelectedRows([]);
+    setSelectAllMode('none');
+  }, [statusFilter, originFilter, destinationFilter]);
   // Get unique values for filter dropdowns
   const uniqueOrigins = [...new Set(leads.map(lead => lead.origin))].sort();
   const uniqueDestinations = [...new Set(leads.map(lead => lead.destination))].sort();
-
   const handleBulkUpdate = () => {
     setBulkActionType('update');
     setShowBulkDialog(true);
   };
-
   const handleBulkDelete = () => {
     setBulkActionType('delete');
     setShowBulkDialog(true);
   };
-
   const handleCloseBulkDialog = () => {
     setShowBulkDialog(false);
     setBulkActionType(null);
     setSelectedRows([]);
+    setSelectAllMode('none');
   };
-
+  
+  // Handle select all functionality
+  const handleSelectAll = (value: boolean) => {
+    if (value) {
+      // Select all filtered rows across all pages
+      const allFilteredIds = filteredData.map(row => row.id);
+      setSelectedRows(allFilteredIds);
+      setSelectAllMode('all');
+    } else {
+      setSelectedRows([]);
+      setSelectAllMode('none');
+    }
+  };
+  
+  // Handle individual row selection
+  const handleRowSelect = (rowId: string, value: boolean) => {
+    if (value) {
+      const newSelected = [...selectedRows, rowId];
+      setSelectedRows(newSelected);
+      
+      // Check if all visible rows are now selected
+      const allVisibleSelected = tableData.every(row => newSelected.includes(row.id));
+      if (allVisibleSelected && selectAllMode === 'none') {
+        setSelectAllMode('page');
+      }
+    } else {
+      const newSelected = selectedRows.filter(id => id !== rowId);
+      setSelectedRows(newSelected);
+      setSelectAllMode('none');
+    }
+  };
+  
+  // Calculate checkbox state for "Select All" header
+  const getSelectAllState = () => {
+    if (selectAllMode === 'all') {
+      return true;
+    }
+    if (selectAllMode === 'page') {
+      return 'indeterminate';
+    }
+    if (selectedRows.length === 0) {
+      return false;
+    }
+    
+    // Check if all visible rows are selected
+    const allVisibleSelected = tableData.every(row => selectedRows.includes(row.id));
+    const someVisibleSelected = tableData.some(row => selectedRows.includes(row.id));
+    
+    if (allVisibleSelected && tableData.length > 0) {
+      return true;
+    }
+    if (someVisibleSelected) {
+      return 'indeterminate';
+    }
+    return false;
+  };
   // Handle status update inline
   const handleStatusUpdate = async (leadId: string, newStatus: LeadStatus) => {
     try {
       await updateLead(leadId, { status: newStatus });
-      toast.success('Status updated successfully!');
-    } catch (error) {
-      toast.error('Failed to update status');
-    }
+      } catch (error) {
+      }
   };
-
   // Define columns for the leads table
   const columns: ColumnDef<LeadData>[] = [
     {
@@ -130,14 +228,8 @@ export default function LeadsDataTable() {
       header: () => (
         <div className='flex items-center justify-center'>
           <Checkbox
-            checked={
-              selectedRows.length === tableData.length && tableData.length > 0
-                ? true
-                : selectedRows.length > 0
-                ? 'indeterminate'
-                : false
-            }
-            onCheckedChange={(value) => value ? setSelectedRows(tableData.map(row => row.id)) : setSelectedRows([])}
+            checked={getSelectAllState()}
+            onCheckedChange={handleSelectAll}
             aria-label='Select all'
           />
         </div>
@@ -146,13 +238,7 @@ export default function LeadsDataTable() {
         <div className='flex items-center justify-center'>
           <Checkbox
             checked={selectedRows.includes(row.original.id)}
-            onCheckedChange={(value) => {
-              if (value) {
-                setSelectedRows([...selectedRows, row.original.id]);
-              } else {
-                setSelectedRows(selectedRows.filter(id => id !== row.original.id));
-              }
-            }}
+            onCheckedChange={(value) => handleRowSelect(row.original.id, value)}
             aria-label='Select row'
           />
         </div>
@@ -218,9 +304,7 @@ export default function LeadsDataTable() {
           { value: 'SHIPPED', label: 'Shipped', color: 'text-green-600' },
           { value: 'FAILED', label: 'Failed', color: 'text-red-600' },
         ];
-
         const currentStatus = statusOptions.find(option => option.value === row.original.status);
-
         return (
           <Select
             value={row.original.status}
@@ -281,7 +365,6 @@ export default function LeadsDataTable() {
       enableHiding: false,
     },
   ];
-
   return (
     <div className='space-y-4'>
       {/* Filters */}
@@ -290,7 +373,6 @@ export default function LeadsDataTable() {
           <Filter className='h-4 w-4 text-muted-foreground' />
           <span className='text-sm font-medium'>Filters:</span>
         </div>
-        
         {/* Status Filter */}
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className='w-[140px]'>
@@ -304,7 +386,6 @@ export default function LeadsDataTable() {
             <SelectItem value='FAILED'>Failed</SelectItem>
           </SelectContent>
         </Select>
-
         {/* Origin Filter */}
         <Select value={originFilter} onValueChange={setOriginFilter}>
           <SelectTrigger className='w-[140px]'>
@@ -317,7 +398,6 @@ export default function LeadsDataTable() {
             ))}
           </SelectContent>
         </Select>
-
         {/* Destination Filter */}
         <Select value={destinationFilter} onValueChange={setDestinationFilter}>
           <SelectTrigger className='w-[140px]'>
@@ -330,7 +410,6 @@ export default function LeadsDataTable() {
             ))}
           </SelectContent>
         </Select>
-
         {/* Clear Filters Button */}
         {(statusFilter !== 'all' || originFilter !== 'all' || destinationFilter !== 'all') && (
           <Button 
@@ -346,18 +425,53 @@ export default function LeadsDataTable() {
           </Button>
         )}
       </div>
-
       {/* Action Bar */}
       <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          {tableData.length} lead{tableData.length !== 1 ? 's' : ''} found
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-muted-foreground">
+              {totalItems} lead{totalItems !== 1 ? 's' : ''} found
+            </div>
+            {selectedRows.length > 0 && (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">
+                    {selectedRows.length} selected
+                  </span>
+                  {selectAllMode === 'all' && (
+                    <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                      All {totalItems} items
+                    </span>
+                  )}
+                  {selectAllMode === 'page' && (
+                    <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full">
+                      Page only
+                    </span>
+                  )}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleBulkUpdate}
+                  className="h-8"
+                >
+                  Update Status
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleBulkDelete}
+                  className="h-8 text-red-600 hover:text-red-700"
+                >
+                  Delete Selected
+                </Button>
+              </div>
+            )}
         </div>
         <Button onClick={() => setShowCreateModal(true)} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
           Add Lead
         </Button>
       </div>
-
       {/* Use a simple table for leads */}
       <div className="overflow-hidden rounded-lg border">
         <Table>
@@ -371,12 +485,12 @@ export default function LeadsDataTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? (
+            {(isLoading || authLoading) ? (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
                   <div className="flex items-center justify-center gap-2">
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Loading leads...
+                    {authLoading ? 'Checking authentication...' : 'Loading leads...'}
                   </div>
                 </TableCell>
               </TableRow>
@@ -411,25 +525,43 @@ export default function LeadsDataTable() {
           </TableBody>
         </Table>
       </div>
-
+      
+      {/* Debug Info (remove in production) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="text-xs text-muted-foreground p-2 bg-muted rounded">
+          Debug: Total Items: {totalItems}, Total Pages: {totalPages}, Current Page: {paginationWithTotalItems.currentPage}, Items Per Page: {paginationWithTotalItems.itemsPerPage}
+        </div>
+      )}
+      
+      {/* Pagination */}
+      <Pagination
+        currentPage={paginationWithTotalItems.currentPage}
+        totalPages={paginationWithTotalItems.totalPages}
+        totalItems={totalItems}
+        itemsPerPage={paginationWithTotalItems.itemsPerPage}
+        onPageChange={paginationWithTotalItems.handlePageChange}
+        onItemsPerPageChange={paginationWithTotalItems.handleItemsPerPageChange}
+        showRowsPerPage={true}
+        showFirstLast={true}
+        maxPageButtons={5}
+        pageSizeOptions={[5, 10, 20, 50, 100]}
+      />
+      
       {/* Modals */}
       <CreateLeadForm
         open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
       />
-
       <EditLeadForm
         open={!!editingLead}
         onClose={() => setEditingLead(null)}
         lead={editingLead}
       />
-
       <DeleteLeadDialog
         open={!!deletingLead}
         onClose={() => setDeletingLead(null)}
         lead={deletingLead}
       />
-
       <BulkActionsDialog
         open={showBulkDialog}
         onClose={handleCloseBulkDialog}

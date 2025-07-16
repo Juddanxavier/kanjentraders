@@ -4,17 +4,14 @@ import { getServerSession } from '@/lib/services/sessionService';
 import { prisma } from '@/lib/prisma';
 import { validateTrackingNumber } from '@/lib/services/shippoService';
 import { generateWhiteLabelTrackingId } from '@/lib/utils/tracking-id';
-
 // Shippo API integration
 const SHIPPO_API_KEY = process.env.SHIPPO_API_KEY;
 const SHIPPO_BASE_URL = 'https://api.goshippo.com';
-
 // Function to register tracking with Shippo
 async function registerTracking(carrier: string, trackingNumber: string) {
   if (!SHIPPO_API_KEY) {
     throw new Error('Shippo API key not configured');
   }
-
   const response = await fetch(`${SHIPPO_BASE_URL}/tracks/`, {
     method: 'POST',
     headers: {
@@ -26,80 +23,64 @@ async function registerTracking(carrier: string, trackingNumber: string) {
       tracking_number: trackingNumber
     })
   });
-
   if (!response.ok) {
     const error = await response.json();
     throw new Error(`Shippo API error: ${error.detail || 'Unknown error'}`);
   }
-
   return await response.json();
 }
-
 // Function to get tracking info from Shippo
 async function getTrackingInfo(carrier: string, trackingNumber: string) {
   if (!SHIPPO_API_KEY) {
     throw new Error('Shippo API key not configured');
   }
-
   const response = await fetch(`${SHIPPO_BASE_URL}/tracks/${carrier}/${trackingNumber}`, {
     headers: {
       'Authorization': `ShippoToken ${SHIPPO_API_KEY}`
     }
   });
-
   if (!response.ok) {
     const error = await response.json();
     throw new Error(`Shippo API error: ${error.detail || 'Unknown error'}`);
   }
-
   return await response.json();
 }
-
 // POST /api/admin/shipments - Create a new shipment
 export async function POST(request: NextRequest) {
   try {
     // Get session using session service
     const sessionData = await getServerSession(request.headers);
-    
     if (!sessionData) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    
     const { user } = sessionData;
-    
     // Check if user can manage parcels
     if (!canManageParcels(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-    
     const body = await request.json();
     const { trackingNumber, carrier } = body;
-    
     // Validate required fields
     if (!trackingNumber || !carrier) {
       return NextResponse.json({ 
         error: 'Missing required fields: trackingNumber and carrier are required' 
       }, { status: 400 });
     }
-    
     // Validate tracking number format
     if (!validateTrackingNumber(carrier, trackingNumber)) {
       return NextResponse.json({ 
         error: `Invalid tracking number format for ${carrier}` 
       }, { status: 400 });
     }
-    
     // Check if tracking number already exists
     const existingShipment = await prisma.shipment.findFirst({
       where: { trackingNumber }
     });
-    
     if (existingShipment) {
       return NextResponse.json({ 
         error: 'A shipment with this tracking number already exists' 
       }, { status: 400 });
     }
-    
     // Create a generic lead for tracking-only shipments
     const lead = await prisma.lead.create({
       data: {
@@ -114,21 +95,17 @@ export async function POST(request: NextRequest) {
         assignedToId: null // No user assignment for tracking-only
       }
     });
-    
     // Register tracking with Shippo and get initial tracking info
     let shippoData = null;
     let trackingStatus = 'UNKNOWN';
     let estimatedDelivery = null;
     let trackingEvents = null;
-    
     try {
       // Register tracking with Shippo
       const trackingResponse = await registerTracking(carrier, trackingNumber);
       shippoData = trackingResponse;
-      
       // Get current tracking info
       const trackingInfo = await getTrackingInfo(carrier, trackingNumber);
-      
       // Extract tracking details
       if (trackingInfo) {
         trackingStatus = trackingInfo.tracking_status?.status || 'UNKNOWN';
@@ -139,7 +116,6 @@ export async function POST(request: NextRequest) {
       console.warn('Shippo API error (continuing with basic shipment):', shippoError);
       // Continue with shipment creation even if Shippo fails
     }
-    
     // Map Shippo status to our internal status
     const mapShippoStatus = (status: string) => {
       switch (status?.toLowerCase()) {
@@ -152,24 +128,19 @@ export async function POST(request: NextRequest) {
         default: return 'PENDING';
       }
     };
-    
     // Generate unique white label tracking ID
     let whiteLabelTrackingId: string;
     let isUnique = false;
-    
     while (!isUnique) {
       whiteLabelTrackingId = generateWhiteLabelTrackingId();
-      
       // Check if this ID already exists
       const existingId = await prisma.shipment.findUnique({
         where: { whiteLabelTrackingId }
       });
-      
       if (!existingId) {
         isUnique = true;
       }
     }
-    
     // Create shipment with Shippo data
     const shipment = await prisma.shipment.create({
       data: {
@@ -186,7 +157,6 @@ export async function POST(request: NextRequest) {
         notes: `Created by ${user.name || user.email} via admin panel`
       }
     });
-    
     return NextResponse.json({ 
       message: 'Shipment created successfully and registered with Shippo for tracking!',
       shipment: {
@@ -200,7 +170,6 @@ export async function POST(request: NextRequest) {
         trackingEvents: trackingEvents ? trackingEvents.length : 0
       }
     });
-    
   } catch (error) {
     console.error('Error creating shipment:', error);
     return NextResponse.json({ 
@@ -208,24 +177,19 @@ export async function POST(request: NextRequest) {
     }, { status: 500 });
   }
 }
-
 // GET /api/admin/shipments - Get all shipments (filtered by permissions)
 export async function GET(request: NextRequest) {
   try {
     // Get session using session service
     const sessionData = await getServerSession(request.headers);
-    
     if (!sessionData) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    
     const { user } = sessionData;
-    
     // Check if user can manage parcels
     if (!canManageParcels(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-    
     // Get shipments with lead and user info
     const shipments = await prisma.shipment.findMany({
       include: {
@@ -245,9 +209,7 @@ export async function GET(request: NextRequest) {
       },
       orderBy: { createdAt: 'desc' }
     });
-    
     return NextResponse.json({ shipments });
-    
   } catch (error) {
     console.error('Error fetching shipments:', error);
     return NextResponse.json({ 
@@ -255,33 +217,26 @@ export async function GET(request: NextRequest) {
     }, { status: 500 });
   }
 }
-
 // DELETE /api/admin/shipments - Delete multiple shipments
 export async function DELETE(request: NextRequest) {
   try {
     // Get session using session service
     const sessionData = await getServerSession(request.headers);
-    
     if (!sessionData) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    
     const { user } = sessionData;
-    
     // Check if user can manage parcels
     if (!canManageParcels(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-    
     const body = await request.json();
     const { shipmentIds } = body;
-    
     if (!shipmentIds || !Array.isArray(shipmentIds) || shipmentIds.length === 0) {
       return NextResponse.json({ 
         error: 'shipmentIds array is required' 
       }, { status: 400 });
     }
-    
     // Delete shipments and their associated leads
     const deletedShipments = await prisma.$transaction(async (tx) => {
       // Get shipments to delete
@@ -289,31 +244,25 @@ export async function DELETE(request: NextRequest) {
         where: { id: { in: shipmentIds } },
         include: { lead: true }
       });
-      
       // Delete shipments
       await tx.shipment.deleteMany({
         where: { id: { in: shipmentIds } }
       });
-      
       // Delete associated leads (only if they're tracking-only leads)
       const leadsToDelete = shipmentsToDelete
         .filter(s => s.lead.email.includes('@system.local'))
         .map(s => s.lead.id);
-      
       if (leadsToDelete.length > 0) {
         await tx.lead.deleteMany({
           where: { id: { in: leadsToDelete } }
         });
       }
-      
       return shipmentsToDelete;
     });
-    
     return NextResponse.json({ 
       message: `Successfully deleted ${deletedShipments.length} shipment(s)`,
       deletedCount: deletedShipments.length
     });
-    
   } catch (error) {
     console.error('Error deleting shipments:', error);
     return NextResponse.json({ 

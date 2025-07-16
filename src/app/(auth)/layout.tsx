@@ -1,10 +1,8 @@
 /** @format */
-
 import { Icons } from '@/components/sidebar/icons';
 import { Button } from '@/components/ui/button';
 import { Link } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
-
 export default function AuthLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {

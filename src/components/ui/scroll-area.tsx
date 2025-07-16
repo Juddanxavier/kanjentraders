@@ -1,8 +1,6 @@
 "use client"
-
 import * as React from "react"
 import { cn } from "@/lib/utils"
-
 const ScrollArea = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
@@ -18,5 +16,4 @@ const ScrollArea = React.forwardRef<
   </div>
 ))
 ScrollArea.displayName = "ScrollArea"
-
 export { ScrollArea }

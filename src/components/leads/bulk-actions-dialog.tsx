@@ -1,7 +1,5 @@
 /** @format */
-
 'use client';
-
 import React, { useState } from 'react';
 import { useLeadStore } from '@/store/lead-store';
 import { Button } from '@/components/ui/button';
@@ -9,23 +7,20 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Loader2, Users, AlertTriangle } from 'lucide-react';
-import { toast } from 'sonner';
 import { LeadStatus } from '@/generated/prisma';
-
+import { toast } from 'sonner';
 interface BulkActionsDialogProps {
   open: boolean;
   onClose: () => void;
   selectedLeads: string[];
   actionType: 'update' | 'delete' | null;
 }
-
 const statusOptions = [
   { value: 'NEW', label: 'New' },
   { value: 'CONTACTED', label: 'Contacted' },
   { value: 'SHIPPED', label: 'Shipped' },
   { value: 'FAILED', label: 'Failed' },
 ];
-
 export default function BulkActionsDialog({ 
   open, 
   onClose, 
@@ -34,22 +29,19 @@ export default function BulkActionsDialog({
 }: BulkActionsDialogProps) {
   const { bulkUpdateStatus, bulkDelete, isLoading } = useLeadStore();
   const [selectedStatus, setSelectedStatus] = useState<LeadStatus | ''>('');
-
   const handleBulkUpdate = async () => {
     if (!selectedStatus) {
-      toast.error('Please select a status');
       return;
     }
-
     try {
       await bulkUpdateStatus(selectedLeads, selectedStatus);
       toast.success(`Successfully updated ${selectedLeads.length} lead(s)`);
       onClose();
     } catch (error) {
       toast.error('Failed to update leads. Please try again.');
+      console.error('Error updating leads:', error);
     }
   };
-
   const handleBulkDelete = async () => {
     try {
       await bulkDelete(selectedLeads);
@@ -57,14 +49,13 @@ export default function BulkActionsDialog({
       onClose();
     } catch (error) {
       toast.error('Failed to delete leads. Please try again.');
+      console.error('Error deleting leads:', error);
     }
   };
-
   const handleClose = () => {
     setSelectedStatus('');
     onClose();
   };
-
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-md">
@@ -83,7 +74,6 @@ export default function BulkActionsDialog({
             )}
           </DialogTitle>
         </DialogHeader>
-
         <div className="space-y-4">
           <div className="bg-gray-50 p-3 rounded-lg">
             <p className="text-sm text-gray-600">
@@ -91,7 +81,6 @@ export default function BulkActionsDialog({
               {actionType === 'delete' ? 'deletion' : 'status update'}.
             </p>
           </div>
-
           {actionType === 'update' && (
             <div className="space-y-2">
               <Label htmlFor="status">New Status</Label>
@@ -109,7 +98,6 @@ export default function BulkActionsDialog({
               </Select>
             </div>
           )}
-
           {actionType === 'delete' && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3">
               <p className="text-red-800 text-sm font-medium">
@@ -118,12 +106,10 @@ export default function BulkActionsDialog({
             </div>
           )}
         </div>
-
         <DialogFooter className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={handleClose}>
             Cancel
           </Button>
-          
           {actionType === 'update' && (
             <Button 
               type="button" 
@@ -140,7 +126,6 @@ export default function BulkActionsDialog({
               )}
             </Button>
           )}
-
           {actionType === 'delete' && (
             <Button 
               type="button" 

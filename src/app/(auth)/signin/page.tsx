@@ -1,7 +1,6 @@
 /** @format */
+import { redirect } from 'next/navigation';
 
-import SigninFormWithPhone from '@/components/auth/signin-form-with-phone';
-
-export default function LoginPage() {
-  return <SigninFormWithPhone />;
+export default function SigninPage() {
+  redirect('/login');
 }

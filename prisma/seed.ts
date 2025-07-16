@@ -71,6 +71,9 @@ async function main() {
   try {
     // Clear existing data (optional - comment out if you want to keep existing data)
     console.log('🧹 Clearing existing data...');
+    await prisma.notification.deleteMany();
+    await prisma.shipment.deleteMany();
+    await prisma.lead.deleteMany();
     await prisma.session.deleteMany();
     await prisma.account.deleteMany();
     await prisma.user.deleteMany();

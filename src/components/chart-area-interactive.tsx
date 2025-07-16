@@ -1,8 +1,6 @@
 "use client"
-
 import * as React from "react"
 import { IconTrendingUp, IconDeviceDesktop, IconDeviceMobile } from "@tabler/icons-react"
-
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -24,9 +22,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@/components/ui/toggle-group"
-
 export const description = "An interactive area chart"
-
 const chartData = [
   { date: "2024-04-01", desktop: 222, mobile: 150 },
   { date: "2024-04-02", desktop: 97, mobile: 180 },
@@ -120,7 +116,6 @@ const chartData = [
   { date: "2024-06-29", desktop: 103, mobile: 160 },
   { date: "2024-06-30", desktop: 446, mobile: 400 },
 ]
-
 // Calculate summary metrics
 function calculateMetrics(data: typeof chartData) {
   const totalDesktop = data.reduce((sum, item) => sum + item.desktop, 0)
@@ -129,7 +124,6 @@ function calculateMetrics(data: typeof chartData) {
   const desktopPercentage = total > 0 ? (totalDesktop / total) * 100 : 0
   const mobilePercentage = total > 0 ? (totalMobile / total) * 100 : 0
   const averageDaily = data.length > 0 ? total / data.length : 0
-  
   return {
     total,
     totalDesktop,
@@ -140,17 +134,14 @@ function calculateMetrics(data: typeof chartData) {
     dataPoints: data.length
   }
 }
-
 export function ChartAreaInteractive() {
   const isMobile = useIsMobile()
   const [timeRange, setTimeRange] = React.useState("90d")
-
   React.useEffect(() => {
     if (isMobile) {
       setTimeRange("7d")
     }
   }, [isMobile])
-
   const filteredData = chartData.filter((item) => {
     const date = new Date(item.date)
     const referenceDate = new Date("2024-06-30")
@@ -164,7 +155,6 @@ export function ChartAreaInteractive() {
     startDate.setDate(startDate.getDate() - daysToSubtract)
     return date >= startDate
   })
-
   return (
     <Card className="@container/card">
       <CardHeader>
@@ -221,7 +211,6 @@ export function ChartAreaInteractive() {
             averageDaily,
             dataPoints,
           } = calculateMetrics(filteredData)
-
           return (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="p-3 bg-gray-50 rounded-lg border shadow-sm">
@@ -232,7 +221,6 @@ export function ChartAreaInteractive() {
                 <p className="text-xs text-gray-500">Total Visitors</p>
                 <Badge variant="outline" className="mt-1">{dataPoints} Data Points</Badge>
               </div>
-
               <div className="p-3 bg-gray-50 rounded-lg border shadow-sm">
                 <div className="flex items-center gap-2">
                   <IconDeviceDesktop className="text-green-600" />
@@ -241,7 +229,6 @@ export function ChartAreaInteractive() {
                 <p className="text-xs text-gray-500">Desktop ({desktopPercentage.toFixed(1)}%)</p>
                 <Badge variant="outline" className="mt-1">Primary Platform</Badge>
               </div>
-
               <div className="p-3 bg-gray-50 rounded-lg border shadow-sm">
                 <div className="flex items-center gap-2">
                   <IconDeviceMobile className="text-orange-600" />

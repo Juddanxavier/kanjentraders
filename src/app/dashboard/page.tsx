@@ -1,29 +1,28 @@
 /** @format */
+'use client'
 
 import { LogoutButton } from '@/components/auth/logout-button';
-import { getServerSession } from '@/lib/services/sessionService';
+import { AuthLayout } from '@/components/auth/auth-layout';
+import { useSession } from '@/lib/auth/auth-client';
 import { UserAnalyticsCard } from '@/components/analytics/user-analytics-card';
 
 /**
  * USER DASHBOARD PAGE
  * 
  * This page shows user-specific information and actions
- * Security is handled by the dashboard layout
+ * Security is handled by the AuthLayout component
  */
-
-export default async function DashboardPage() {
-  // Get session for user info (already validated in layout)
-  const sessionData = await getServerSession();
-
-  // This should never happen due to layout validation, but safety check
-  if (!sessionData) {
-    return <div>Access denied</div>;
+export default function DashboardPage() {
+  const { data: session } = useSession();
+  
+  if (!session) {
+    return null;
   }
   
-  const { user } = sessionData;
-
+  const { user } = session;
   return (
-    <div className="dashboard-page">
+    <AuthLayout>
+      <div className="dashboard-page">
       <div className="dashboard-header">
         <div className="dashboard-header-content">
           <div>
@@ -35,7 +34,6 @@ export default async function DashboardPage() {
           </div>
         </div>
       </div>
-
       <div className="dashboard-grid">
         {/* User Profile Card */}
         <div className="dashboard-card">
@@ -48,7 +46,6 @@ export default async function DashboardPage() {
           </div>
           <button className="btn-primary">Edit Profile</button>
         </div>
-
         {/* Quick Actions */}
         <div className="dashboard-card">
           <h2>Quick Actions</h2>
@@ -58,7 +55,6 @@ export default async function DashboardPage() {
             <button className="btn-secondary">Settings</button>
           </div>
         </div>
-
         {/* Recent Activity */}
         <div className="dashboard-card">
           <h2>Recent Activity</h2>
@@ -66,14 +62,12 @@ export default async function DashboardPage() {
             <p>No recent activity</p>
           </div>
         </div>
-
         {/* User Analytics (if user is admin) */}
         {user.role === 'admin' && (
           <div className="dashboard-card col-span-full">
             <UserAnalyticsCard />
           </div>
         )}
-        
         {/* Admin Access (if user is admin) */}
         {user.role === 'admin' && (
           <div className="dashboard-card admin-card">
@@ -86,9 +80,9 @@ export default async function DashboardPage() {
         )}
       </div>
     </div>
+    </AuthLayout>
   );
 }
-
 /**
  * SECURITY NOTES:
  * 

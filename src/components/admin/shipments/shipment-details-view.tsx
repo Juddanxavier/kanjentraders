@@ -1,10 +1,8 @@
 'use client';
-
 import { ShipmentDetailsDialog } from './shipment-details-dialog';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-
 interface TrackingEvent {
   status: string;
   status_details?: string;
@@ -16,7 +14,6 @@ interface TrackingEvent {
   };
   message?: string;
 }
-
 interface Shipment {
   id: string;
   leadId: string;
@@ -46,14 +43,11 @@ interface Shipment {
     weight: number;
   };
 }
-
 interface ShipmentDetailsViewProps {
   shipment: Shipment;
 }
-
 export function ShipmentDetailsView({ shipment }: ShipmentDetailsViewProps) {
   const router = useRouter();
-
   return (
     <div className="space-y-6">
       <Button

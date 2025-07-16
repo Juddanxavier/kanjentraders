@@ -1,4 +1,5 @@
 /** @format */
+'use client'
 
 import { AppSidebar } from "@/components/app-sidebar"
 import { ChartAreaInteractive } from "@/components/chart-area-interactive"
@@ -9,33 +10,23 @@ import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar"
-import { headers } from 'next/headers';
-import { auth } from '@/lib/auth/auth';
-
+import { useSession } from "@/lib/auth/auth-client"
 import data from "./data.json"
 
 /**
  * SECURE ADMIN DASHBOARD PAGE
  * 
- * This page is protected by:
- * 1. Middleware - Cookie-based fast redirect
- * 2. Layout - Full session and admin role validation
- * 3. This page - Additional admin-specific checks
- * 
+ * This page is protected by the admin layout in layout.tsx
  * Uses shadcn dashboard template for admin panel
  */
 
-export default async function AdminPage() {
-  // Get session for admin info (already validated in layout)
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  // This should never happen due to middleware validation, but safety check
-  if (!session?.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) {
-    return <div>Access denied</div>;
+export default function AdminPage() {
+  const { data: session } = useSession();
+  
+  if (!session) {
+    return null;
   }
-
+  
   // Filter data based on user's country (unless they're a super_admin)
   let filteredData = data;
   if (session.user.role === 'admin' && session.user.country) {
@@ -43,7 +34,7 @@ export default async function AdminPage() {
     filteredData = data.filter((item: any) => item.country === session.user.country);
   }
   // Super admins see all data
-
+  
   return (
     <SidebarProvider
       style={
@@ -69,5 +60,5 @@ export default async function AdminPage() {
         </div>
       </SidebarInset>
     </SidebarProvider>
-  )
+  );
 }

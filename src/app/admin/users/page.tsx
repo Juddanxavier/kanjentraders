@@ -1,5 +1,4 @@
 /** @format */
-
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth/auth';
 import { redirect } from 'next/navigation';
@@ -10,20 +9,16 @@ import { UsersTable } from '@/components/admin/users-table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { canManageUsers } from '@/lib/auth/permissions';
 import type { AuthUser } from '@/lib/auth/permissions';
-
 export default async function UsersPage() {
   // Get session for admin info
   const session = await auth.api.getSession({
     headers: await headers(),
   });
-
   const user = session?.user as AuthUser | null;
-
   // Check if user can manage users
   if (!user || !canManageUsers(user)) {
     redirect('/dashboard');
   }
-
   return (
     <SidebarProvider
       style={
@@ -45,7 +40,6 @@ export default async function UsersPage() {
                 Manage users, roles, and permissions
               </p>
             </div>
-
             {/* Users Table */}
             <Card>
               <CardHeader>

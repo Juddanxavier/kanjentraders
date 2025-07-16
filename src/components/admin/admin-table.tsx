@@ -1,7 +1,5 @@
 /** @format */
-
 "use client";
-
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import {
@@ -15,7 +13,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { IconPlus } from "@tabler/icons-react";
-
 interface Column {
   key: string;
   label: string;
@@ -23,7 +20,6 @@ interface Column {
   className?: string;
   sortable?: boolean;
 }
-
 interface AdminTableProps {
   columns: Column[];
   data: any[];
@@ -37,7 +33,6 @@ interface AdminTableProps {
   onRetry?: () => void;
   emptyMessage?: string;
 }
-
 export function AdminTable({
   columns,
   data,
@@ -82,7 +77,6 @@ export function AdminTable({
       </div>
     );
   }
-
   // Error state
   if (error) {
     return (
@@ -118,7 +112,6 @@ export function AdminTable({
       </div>
     );
   }
-
   return (
     <div className={cn("space-y-4", className)}>
       {/* Header */}
@@ -138,7 +131,6 @@ export function AdminTable({
           )}
         </div>
       )}
-
       {/* Table */}
       <div className="rounded-lg border bg-card">
         <Table>
@@ -180,7 +172,6 @@ export function AdminTable({
     </div>
   );
 }
-
 // Helper components for common table cells
 export const StatusBadge = ({
   status,
@@ -211,14 +202,12 @@ export const StatusBadge = ({
         return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
     }
   };
-
   return (
     <Badge variant={variant} className={`${getStatusColor(status)} px-2 py-1`}>
       {status}
     </Badge>
   );
 };
-
 export const ActionButton = ({
   onClick,
   children,

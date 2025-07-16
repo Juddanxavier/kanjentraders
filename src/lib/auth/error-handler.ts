@@ -1,8 +1,6 @@
 /** @format */
-
 import { APIError } from 'better-auth/api';
 import { NextResponse } from 'next/server';
-
 export type AuthErrorCode = 
   | 'INVALID_CREDENTIALS'
   | 'USER_NOT_FOUND'
@@ -13,14 +11,12 @@ export type AuthErrorCode =
   | 'FORBIDDEN'
   | 'RATE_LIMIT_EXCEEDED'
   | 'INTERNAL_SERVER_ERROR';
-
 interface ErrorDetails {
   code: AuthErrorCode;
   message: string;
   statusCode: number;
   details?: any;
 }
-
 /**
  * Maps better-auth errors to user-friendly messages
  */
@@ -34,10 +30,8 @@ export function mapAuthError(error: any): ErrorDetails {
       details: error.body,
     };
   }
-
   // Handle specific error messages
   const errorMessage = error?.message?.toLowerCase() || '';
-  
   if (errorMessage.includes('invalid') && errorMessage.includes('password')) {
     return {
       code: 'INVALID_CREDENTIALS',
@@ -45,7 +39,6 @@ export function mapAuthError(error: any): ErrorDetails {
       statusCode: 401,
     };
   }
-
   if (errorMessage.includes('user') && errorMessage.includes('not found')) {
     return {
       code: 'USER_NOT_FOUND',
@@ -53,7 +46,6 @@ export function mapAuthError(error: any): ErrorDetails {
       statusCode: 404,
     };
   }
-
   if (errorMessage.includes('session') || errorMessage.includes('expired')) {
     return {
       code: 'SESSION_EXPIRED',
@@ -61,7 +53,6 @@ export function mapAuthError(error: any): ErrorDetails {
       statusCode: 401,
     };
   }
-
   if (errorMessage.includes('database') || errorMessage.includes('prisma')) {
     return {
       code: 'DATABASE_ERROR',
@@ -69,7 +60,6 @@ export function mapAuthError(error: any): ErrorDetails {
       statusCode: 503,
     };
   }
-
   if (errorMessage.includes('unauthorized')) {
     return {
       code: 'UNAUTHORIZED',
@@ -77,7 +67,6 @@ export function mapAuthError(error: any): ErrorDetails {
       statusCode: 401,
     };
   }
-
   if (errorMessage.includes('forbidden')) {
     return {
       code: 'FORBIDDEN',
@@ -85,7 +74,6 @@ export function mapAuthError(error: any): ErrorDetails {
       statusCode: 403,
     };
   }
-
   if (errorMessage.includes('rate limit')) {
     return {
       code: 'RATE_LIMIT_EXCEEDED',
@@ -93,7 +81,6 @@ export function mapAuthError(error: any): ErrorDetails {
       statusCode: 429,
     };
   }
-
   // Default error
   return {
     code: 'INTERNAL_SERVER_ERROR',
@@ -102,13 +89,11 @@ export function mapAuthError(error: any): ErrorDetails {
     details: error,
   };
 }
-
 /**
  * Creates a NextResponse with proper error formatting
  */
 export function createErrorResponse(error: any): NextResponse {
   const errorDetails = mapAuthError(error);
-  
   return NextResponse.json(
     {
       error: {
@@ -120,13 +105,11 @@ export function createErrorResponse(error: any): NextResponse {
     { status: errorDetails.statusCode }
   );
 }
-
 /**
  * Logs authentication errors with context
  */
 export function logAuthError(context: string, error: any, additionalInfo?: any) {
   const errorDetails = mapAuthError(error);
-  
   console.error(`[Auth Error - ${context}]`, {
     ...errorDetails,
     timestamp: new Date().toISOString(),
@@ -134,7 +117,6 @@ export function logAuthError(context: string, error: any, additionalInfo?: any) 
     ...additionalInfo,
   });
 }
-
 /**
  * Helper to handle auth errors in try-catch blocks
  */

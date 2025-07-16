@@ -1,24 +1,18 @@
 /** @format */
-
 'use client';
-
 import { useEffect } from 'react';
 import { useAnalyticsStore } from '@/lib/store/analytics-store';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { IconWorld, IconTrendingUp, IconTrendingDown } from '@tabler/icons-react';
-
 interface UsersByCountryChartProps {
   country?: string;
 }
-
 export function UsersByCountryChart({ country }: UsersByCountryChartProps) {
   const { usersByCountry, fetchUsersByCountry, isLoading } = useAnalyticsStore();
-
   useEffect(() => {
     fetchUsersByCountry(country);
   }, [fetchUsersByCountry, country]);
-
   if (isLoading) {
     return (
       <Card>
@@ -39,7 +33,6 @@ export function UsersByCountryChart({ country }: UsersByCountryChartProps) {
       </Card>
     );
   }
-
   return (
     <Card>
       <CardHeader>
@@ -54,7 +47,6 @@ export function UsersByCountryChart({ country }: UsersByCountryChartProps) {
           {usersByCountry.map((countryData, index) => {
             const isTopCountry = index === 0;
             const isGrowingMarket = countryData.percentage >= 20;
-            
             return (
               <div key={countryData.country} className="flex items-center justify-between p-3 rounded-lg border bg-card/50">
                 <div className="flex items-center gap-3">
@@ -94,7 +86,6 @@ export function UsersByCountryChart({ country }: UsersByCountryChartProps) {
             );
           })}
         </div>
-        
         {usersByCountry.length === 0 && (
           <div className="text-center py-8 text-muted-foreground">
             <IconWorld className="h-12 w-12 mx-auto mb-4 opacity-50" />

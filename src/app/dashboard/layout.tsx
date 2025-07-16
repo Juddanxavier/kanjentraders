@@ -1,16 +1,13 @@
 /** @format */
-
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth/auth';
 import { DashboardNav } from '@/components/dashboard-nav';
-
 /**
  * USER DASHBOARD LAYOUT
  * 
  * Security is handled entirely by the middleware.
  * This layout simply renders the UI and user-specific data.
  */
-
 export default async function DashboardLayout({
   children,
 }: {
@@ -21,12 +18,10 @@ export default async function DashboardLayout({
   const session = await auth.api.getSession({
     headers: await headers(),
   });
-
   return (
     <div className="dashboard-layout">
       {/* User Navigation */}
       <DashboardNav user={session?.user || null} />
-
       {/* User Content */}
       <main className="dashboard-content">
         {children}
@@ -34,7 +29,6 @@ export default async function DashboardLayout({
     </div>
   );
 }
-
 /**
  * SECURITY FEATURES:
  * 

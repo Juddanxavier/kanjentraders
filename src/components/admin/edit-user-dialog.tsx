@@ -1,13 +1,10 @@
 /** @format */
-
 "use client"
-
 import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { IconLoader2 } from "@tabler/icons-react"
-
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -33,18 +30,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { toast } from "sonner"
 import type { AuthUser, UserRole } from "@/lib/auth/permissions"
-
 const editFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   role: z.enum(["user", "admin", "super_admin"]),
   country: z.string().min(1, "Country is required"),
   phoneNumber: z.string().optional(),
 })
-
 type EditFormData = z.infer<typeof editFormSchema>
-
 interface EditUserDialogProps {
   user: {
     id: string
@@ -59,7 +52,6 @@ interface EditUserDialogProps {
   onSuccess?: () => void
   currentUser: AuthUser
 }
-
 export function EditUserDialog({ 
   user, 
   open, 
@@ -68,7 +60,6 @@ export function EditUserDialog({
   currentUser 
 }: EditUserDialogProps) {
   const [loading, setLoading] = React.useState(false)
-
   const form = useForm<EditFormData>({
     resolver: zodResolver(editFormSchema),
     defaultValues: {
@@ -78,7 +69,6 @@ export function EditUserDialog({
       phoneNumber: user.phoneNumber || "",
     },
   })
-
   // Reset form when user changes
   React.useEffect(() => {
     form.reset({
@@ -88,11 +78,9 @@ export function EditUserDialog({
       phoneNumber: user.phoneNumber || "",
     })
   }, [user, form])
-
   async function onSubmit(data: EditFormData) {
     try {
       setLoading(true)
-
       // Update user via API
       const response = await fetch(`/api/admin/users/${user.id}/edit`, {
         method: "PATCH",
@@ -101,23 +89,18 @@ export function EditUserDialog({
         },
         body: JSON.stringify(data),
       })
-
       if (!response.ok) {
         const error = await response.json()
         throw new Error(error.message || "Failed to update user")
       }
-
-      toast.success("User updated successfully")
       onOpenChange(false)
       onSuccess?.()
     } catch (error) {
       console.error("Error updating user:", error)
-      toast.error(error instanceof Error ? error.message : "Failed to update user")
     } finally {
       setLoading(false)
     }
   }
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
@@ -146,7 +129,6 @@ export function EditUserDialog({
                 </FormItem>
               )}
             />
-
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -176,7 +158,6 @@ export function EditUserDialog({
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="country"
@@ -206,7 +187,6 @@ export function EditUserDialog({
                 )}
               />
             </div>
-
             <FormField
               control={form.control}
               name="phoneNumber"
@@ -225,7 +205,6 @@ export function EditUserDialog({
                 </FormItem>
               )}
             />
-
             <DialogFooter>
               <Button
                 type="button"

@@ -1,17 +1,13 @@
 /** @format */
-
 'use client';
-
 import { useEffect } from 'react';
 import { useAnalyticsStore } from '@/lib/store/analytics-store';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { IconShield, IconUser, IconUserCheck, IconCrown } from '@tabler/icons-react';
-
 interface UsersByRoleChartProps {
   country?: string;
 }
-
 const getRoleIcon = (role: string) => {
   switch (role.toLowerCase()) {
     case 'super_admin':
@@ -23,7 +19,6 @@ const getRoleIcon = (role: string) => {
       return IconUser;
   }
 };
-
 const getRoleColor = (role: string) => {
   switch (role.toLowerCase()) {
     case 'super_admin':
@@ -35,18 +30,14 @@ const getRoleColor = (role: string) => {
       return 'bg-green-100 text-green-700';
   }
 };
-
 const formatRoleName = (role: string) => {
   return role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
 };
-
 export function UsersByRoleChart({ country }: UsersByRoleChartProps) {
   const { usersByRole, fetchUsersByRole, isLoading } = useAnalyticsStore();
-
   useEffect(() => {
     fetchUsersByRole(country);
   }, [fetchUsersByRole, country]);
-
   if (isLoading) {
     return (
       <Card>
@@ -68,7 +59,6 @@ export function UsersByRoleChart({ country }: UsersByRoleChartProps) {
       </Card>
     );
   }
-
   return (
     <Card>
       <CardHeader>
@@ -84,7 +74,6 @@ export function UsersByRoleChart({ country }: UsersByRoleChartProps) {
             const RoleIcon = getRoleIcon(roleData.role);
             const colorClass = getRoleColor(roleData.role);
             const isHighestRole = roleData.role.toLowerCase() === 'super_admin';
-            
             return (
               <div key={roleData.role} className="p-4 border rounded-lg bg-card/50 hover:bg-card/80 transition-colors">
                 <div className="flex items-center justify-between mb-3">
@@ -97,7 +86,6 @@ export function UsersByRoleChart({ country }: UsersByRoleChartProps) {
                     </Badge>
                   )}
                 </div>
-                
                 <div className="text-center">
                   <div className="text-2xl font-bold mb-1">
                     {roleData.users.toLocaleString()}
@@ -109,7 +97,6 @@ export function UsersByRoleChart({ country }: UsersByRoleChartProps) {
                     {roleData.percentage}% of total
                   </div>
                 </div>
-                
                 <div className="mt-3 pt-3 border-t">
                   <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
                     <IconUserCheck className="h-3 w-3" />
@@ -121,7 +108,6 @@ export function UsersByRoleChart({ country }: UsersByRoleChartProps) {
             );
           })}
         </div>
-        
         {usersByRole.length === 0 && (
           <div className="text-center py-8 text-muted-foreground">
             <IconShield className="h-12 w-12 mx-auto mb-4 opacity-50" />

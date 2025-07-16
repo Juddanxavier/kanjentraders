@@ -1,5 +1,4 @@
 "use client"
-
 import { type Icon } from "@tabler/icons-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -10,7 +9,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-
 export function NavMain({
   items,
 }: {
@@ -21,14 +19,12 @@ export function NavMain({
   }[]
 }) {
   const pathname = usePathname()
-  
   return (
     <SidebarGroup>
       <SidebarGroupContent>
         <SidebarMenu>
           {items.map((item) => {
             const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
-            
             return (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton 

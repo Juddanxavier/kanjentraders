@@ -1,5 +1,4 @@
 'use client';
-
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -56,8 +55,6 @@ import {
   MoreHorizontal
 } from 'lucide-react';
 import { CreateShipmentDialog } from './create-shipment-dialog';
-import { useToast } from '@/hooks/use-toast';
-
 interface Shipment {
   id: string;
   leadId: string;
@@ -76,41 +73,31 @@ interface Shipment {
     origin: string;
   };
 }
-
 type SortField = 'whiteLabelTrackingId' | 'customerName' | 'carrier' | 'status' | 'createdAt' | 'estimatedDelivery';
 type SortOrder = 'asc' | 'desc';
-
 export function ShipmentManagement() {
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  
   // Filtering states
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [carrierFilter, setCarrierFilter] = useState<string>('all');
   const [dateRangeFilter, setDateRangeFilter] = useState<string>('all');
-  
   // Sorting states
   const [sortField, setSortField] = useState<SortField>('createdAt');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
-  
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
-  
   // Bulk selection states
   const [selectedShipments, setSelectedShipments] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState(false);
-  
-  const { toast } = useToast();
   const router = useRouter();
-
   // Fetch shipments
   useEffect(() => {
     fetchShipments();
   }, []);
-
   const fetchShipments = async () => {
     try {
       const response = await fetch('/api/admin/shipments');
@@ -120,56 +107,33 @@ export function ShipmentManagement() {
       }
     } catch (error) {
       console.error('Error fetching shipments:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch shipments',
-        variant: 'destructive',
-      });
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
-
   const handleRefreshTracking = async (shipmentId: string) => {
     try {
       const response = await fetch(`/api/admin/shipments/${shipmentId}/refresh`, {
         method: 'POST',
       });
-      
       if (response.ok) {
-        toast({
-          title: 'Success',
-          description: 'Tracking information refreshed',
-        });
         fetchShipments();
       } else {
         throw new Error('Failed to refresh tracking');
       }
     } catch (error) {
       console.error('Error refreshing tracking:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to refresh tracking information',
-        variant: 'destructive',
-      });
-    }
+      }
   };
-
   const handleDeleteShipment = async (shipmentId: string, trackingNumber: string) => {
     if (!confirm(`Are you sure you want to delete shipment ${trackingNumber}? This action cannot be undone.`)) {
       return;
     }
-
     try {
       const response = await fetch(`/api/admin/shipments/${shipmentId}`, {
         method: 'DELETE',
       });
-      
       if (response.ok) {
-        toast({
-          title: 'Success',
-          description: 'Shipment deleted successfully',
-        });
         fetchShipments();
       } else {
         const errorData = await response.json();
@@ -177,14 +141,8 @@ export function ShipmentManagement() {
       }
     } catch (error) {
       console.error('Error deleting shipment:', error);
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to delete shipment',
-        variant: 'destructive',
-      });
-    }
+      }
   };
-
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case 'DELIVERED':
@@ -203,7 +161,6 @@ export function ShipmentManagement() {
         return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100';
     }
   };
-
   // Helper functions for bulk operations
   const handleSelectAll = (checked: boolean) => {
     setSelectAll(checked);
@@ -213,7 +170,6 @@ export function ShipmentManagement() {
       setSelectedShipments([]);
     }
   };
-
   const handleSelectShipment = (shipmentId: string, checked: boolean) => {
     if (checked) {
       setSelectedShipments(prev => [...prev, shipmentId]);
@@ -222,65 +178,35 @@ export function ShipmentManagement() {
       setSelectAll(false);
     }
   };
-
   const handleBulkDelete = async () => {
     if (selectedShipments.length === 0) return;
-    
     if (!confirm(`Are you sure you want to delete ${selectedShipments.length} shipments? This action cannot be undone.`)) {
       return;
     }
-
     try {
       const promises = selectedShipments.map(id => 
         fetch(`/api/admin/shipments/${id}`, { method: 'DELETE' })
       );
-      
       await Promise.all(promises);
-      
-      toast({
-        title: 'Success',
-        description: `${selectedShipments.length} shipments deleted successfully`,
-      });
-      
       setSelectedShipments([]);
       setSelectAll(false);
       fetchShipments();
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete some shipments',
-        variant: 'destructive',
-      });
-    }
+      }
   };
-
   const handleBulkRefresh = async () => {
     if (selectedShipments.length === 0) return;
-
     try {
       const promises = selectedShipments.map(id => 
         fetch(`/api/admin/shipments/${id}/refresh`, { method: 'POST' })
       );
-      
       await Promise.all(promises);
-      
-      toast({
-        title: 'Success',
-        description: `${selectedShipments.length} shipments refreshed successfully`,
-      });
-      
       setSelectedShipments([]);
       setSelectAll(false);
       fetchShipments();
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to refresh some shipments',
-        variant: 'destructive',
-      });
-    }
+      }
   };
-
   const handleExport = () => {
     const exportData = filteredAndSortedShipments.map(shipment => ({
       'White Label ID': shipment.whiteLabelTrackingId,
@@ -295,12 +221,10 @@ export function ShipmentManagement() {
       'Estimated Delivery': shipment.estimatedDelivery ? new Date(shipment.estimatedDelivery).toLocaleDateString() : 'N/A',
       'Created At': new Date(shipment.createdAt).toLocaleDateString(),
     }));
-
     const csvContent = [
       Object.keys(exportData[0] || {}).join(','),
       ...exportData.map(row => Object.values(row).join(','))
     ].join('\n');
-
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -309,7 +233,6 @@ export function ShipmentManagement() {
     a.click();
     window.URL.revokeObjectURL(url);
   };
-
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
@@ -318,23 +241,18 @@ export function ShipmentManagement() {
       setSortOrder('asc');
     }
   };
-
   const getSortIcon = (field: SortField) => {
     if (sortField !== field) return null;
     return sortOrder === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />;
   };
-
   // Get unique carriers for filter
   const uniqueCarriers = [...new Set(shipments.map(s => s.carrier))].sort();
   const uniqueStatuses = [...new Set(shipments.map(s => s.status))].sort();
-
   // Filter by date range
   const filterByDateRange = (shipment: Shipment) => {
     if (dateRangeFilter === 'all') return true;
-    
     const now = new Date();
     const createdAt = new Date(shipment.createdAt);
-    
     switch (dateRangeFilter) {
       case 'today':
         return createdAt.toDateString() === now.toDateString();
@@ -348,7 +266,6 @@ export function ShipmentManagement() {
         return true;
     }
   };
-
   // Apply all filters and sorting
   const filteredAndSortedShipments = useMemo(() => {
     let filtered = shipments.filter(shipment => {
@@ -358,24 +275,18 @@ export function ShipmentManagement() {
         shipment.lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         shipment.lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         shipment.carrier.toLowerCase().includes(searchTerm.toLowerCase());
-      
       // Status filter
       const statusMatch = statusFilter === 'all' || shipment.status === statusFilter;
-      
       // Carrier filter
       const carrierMatch = carrierFilter === 'all' || shipment.carrier === carrierFilter;
-      
       // Date range filter
       const dateMatch = filterByDateRange(shipment);
-      
       return searchMatch && statusMatch && carrierMatch && dateMatch;
     });
-    
     // Apply sorting
     filtered.sort((a, b) => {
       let aValue: any;
       let bValue: any;
-      
       switch (sortField) {
         case 'whiteLabelTrackingId':
           aValue = a.whiteLabelTrackingId;
@@ -405,28 +316,22 @@ export function ShipmentManagement() {
           aValue = a.createdAt;
           bValue = b.createdAt;
       }
-      
       if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
       if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
       return 0;
     });
-    
     return filtered;
   }, [shipments, searchTerm, statusFilter, carrierFilter, dateRangeFilter, sortField, sortOrder]);
-  
   // Calculate pagination
   const totalPages = Math.ceil(filteredAndSortedShipments.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedShipments = filteredAndSortedShipments.slice(startIndex, endIndex);
-  
   // Reset pagination when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter, carrierFilter, dateRangeFilter]);
-  
   const filteredShipments = filteredAndSortedShipments;
-
   const stats = {
     total: shipments.length,
     pending: shipments.filter(s => s.status === 'PENDING').length,
@@ -434,7 +339,6 @@ export function ShipmentManagement() {
     delivered: shipments.filter(s => s.status === 'DELIVERED').length,
     exceptions: shipments.filter(s => s.status === 'EXCEPTION').length,
   };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -442,7 +346,6 @@ export function ShipmentManagement() {
       </div>
     );
   }
-
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
@@ -456,7 +359,6 @@ export function ShipmentManagement() {
             <div className="text-2xl font-bold">{stats.total}</div>
           </CardContent>
         </Card>
-        
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending</CardTitle>
@@ -466,7 +368,6 @@ export function ShipmentManagement() {
             <div className="text-2xl font-bold">{stats.pending}</div>
           </CardContent>
         </Card>
-        
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">In Transit</CardTitle>
@@ -476,7 +377,6 @@ export function ShipmentManagement() {
             <div className="text-2xl font-bold">{stats.inTransit}</div>
           </CardContent>
         </Card>
-        
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Delivered</CardTitle>
@@ -486,7 +386,6 @@ export function ShipmentManagement() {
             <div className="text-2xl font-bold">{stats.delivered}</div>
           </CardContent>
         </Card>
-        
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Exceptions</CardTitle>
@@ -497,7 +396,6 @@ export function ShipmentManagement() {
           </CardContent>
         </Card>
       </div>
-
       {/* Combined Controls Bar */}
       <div className="flex items-center justify-between gap-4 py-4">
         <div className="flex items-center space-x-4">
@@ -511,7 +409,6 @@ export function ShipmentManagement() {
               className="pl-8 w-64"
             />
           </div>
-
           {/* Filters */}
           <div className="flex items-center space-x-2">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -525,7 +422,6 @@ export function ShipmentManagement() {
                 ))}
               </SelectContent>
             </Select>
-
             <Select value={carrierFilter} onValueChange={setCarrierFilter}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="Carrier" />
@@ -537,7 +433,6 @@ export function ShipmentManagement() {
                 ))}
               </SelectContent>
             </Select>
-
             <Select value={dateRangeFilter} onValueChange={setDateRangeFilter}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="Date Range" />
@@ -550,13 +445,11 @@ export function ShipmentManagement() {
               </SelectContent>
             </Select>
           </div>
-
           {/* Results Count */}
           <div className="text-sm text-muted-foreground">
             {filteredShipments.length} shipment{filteredShipments.length !== 1 ? 's' : ''} found
           </div>
         </div>
-
         {/* Action Buttons */}
         <div className="flex items-center space-x-2">
           {/* Bulk Actions - Show only when items are selected */}
@@ -582,7 +475,6 @@ export function ShipmentManagement() {
               </Button>
             </>
           )}
-
           <Button
             variant="outline"
             size="sm"
@@ -592,7 +484,6 @@ export function ShipmentManagement() {
             <Download className="h-4 w-4" />
             Export
           </Button>
-
           <Button
             variant="outline"
             size="sm"
@@ -601,7 +492,6 @@ export function ShipmentManagement() {
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-
           <Button 
             onClick={() => setShowCreateDialog(true)} 
             size="sm"
@@ -612,7 +502,6 @@ export function ShipmentManagement() {
           </Button>
         </div>
       </div>
-
       {/* Shipments Table */}
       <div className="overflow-hidden rounded-lg border">
         <Table>
@@ -753,7 +642,6 @@ export function ShipmentManagement() {
           </TableBody>
         </Table>
       </div>
-
       {/* Pagination Controls */}
       <div className="flex justify-between items-center py-2">
         <div className="flex items-center space-x-2">
@@ -775,7 +663,6 @@ export function ShipmentManagement() {
           Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, shipments.length)} of {shipments.length} shipments
         </div>
       </div>
-
       {/* Create Shipment Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent className="max-w-2xl">
@@ -787,7 +674,6 @@ export function ShipmentManagement() {
           />
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }

@@ -1,7 +1,5 @@
 /** @format */
-
 import { Lead, LeadStatus } from '@/generated/prisma';
-
 export interface CreateLeadData {
   name: string;
   email: string;
@@ -12,7 +10,6 @@ export interface CreateLeadData {
   assignedToId?: string;
   country?: string; // Optional since it will be set by the API based on admin's country
 }
-
 export interface UpdateLeadData {
   name?: string;
   email?: string;
@@ -23,7 +20,6 @@ export interface UpdateLeadData {
   status?: LeadStatus;
   assignedToId?: string;
 }
-
 export interface LeadFilters {
   status?: LeadStatus;
   assignedToId?: string;
@@ -35,7 +31,6 @@ export interface LeadFilters {
   weightMin?: number;
   weightMax?: number;
 }
-
 export interface LeadStats {
   total: number;
   new: number;
@@ -44,7 +39,6 @@ export interface LeadStats {
   failed: number;
   conversionRate: number;
 }
-
 export interface LeadWithDetails extends Lead {
   assignedTo?: {
     id: string;
@@ -57,10 +51,8 @@ export interface LeadWithDetails extends Lead {
     email: string;
   };
 }
-
 export type SortField = 'name' | 'email' | 'createdAt' | 'updatedAt' | 'weight' | 'status';
 export type SortOrder = 'asc' | 'desc';
-
 export interface LeadSort {
   field: SortField;
   order: SortOrder;

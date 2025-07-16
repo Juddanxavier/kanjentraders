@@ -1,7 +1,5 @@
 /** @format */
-
 "use client"
-
 import * as React from "react"
 import {
   IconSearch,
@@ -29,7 +27,6 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -58,12 +55,10 @@ import {
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { toast } from "sonner"
 import { format } from "date-fns"
 import type { AuthUser, UserRole } from "@/lib/auth/permissions"
 import { AddUserDialog } from "@/components/admin/add-user-dialog"
 import { EditUserDialog } from "@/components/admin/edit-user-dialog"
-
 interface User {
   id: string
   email: string
@@ -81,11 +76,9 @@ interface User {
   lastLogin?: string
   activeSessions?: number
 }
-
 interface UsersTableProps {
   currentUser: AuthUser
 }
-
 export function UsersTable({ currentUser }: UsersTableProps) {
   const [users, setUsers] = React.useState<User[]>([])
   const [loading, setLoading] = React.useState(true)
@@ -95,7 +88,6 @@ export function UsersTable({ currentUser }: UsersTableProps) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [globalFilter, setGlobalFilter] = React.useState("")
   const [editingUser, setEditingUser] = React.useState<User | null>(null)
-
   // Fetch users
   React.useEffect(() => {
     fetchUsers()
@@ -104,21 +96,17 @@ async function fetchUsers() {
     try {
       setLoading(true)
       const response = await fetch('/api/admin/users')
-      
       if (!response.ok) {
         throw new Error('Failed to fetch users')
       }
-      
       const data = await response.json()
       setUsers(data)
     } catch (error) {
       console.error('Error fetching users:', error)
-      toast.error("Failed to load users")
     } finally {
       setLoading(false)
     }
   }
-
   async function handleBanUser(userId: string, ban: boolean) {
     try {
       const response = await fetch('/api/admin/users/ban', {
@@ -128,66 +116,47 @@ async function fetchUsers() {
         },
         body: JSON.stringify({ userId, ban }),
       })
-
       if (!response.ok) {
         throw new Error('Failed to update user status')
       }
-
-      toast.success(ban ? "User banned successfully" : "User unbanned successfully")
       fetchUsers()
     } catch (error) {
-      toast.error("Failed to update user status")
     }
   }
-
   async function handleDeleteUser(userId: string) {
     if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
       return
     }
-    
     try {
       const response = await fetch(`/api/admin/users?id=${userId}`, {
         method: 'DELETE',
       })
-
       if (!response.ok) {
         throw new Error('Failed to delete user')
       }
-
-      toast.success("User deleted successfully")
       fetchUsers()
     } catch (error) {
-      toast.error("Failed to delete user")
     }
   }
-
   async function handleResetPassword(userId: string) {
     try {
       // TODO: Implement password reset API when better-auth supports it
-      toast.info("Password reset feature coming soon")
     } catch (error) {
-      toast.error("Failed to send password reset")
     }
   }
-
   async function handleForceLogout(userId: string) {
     try {
       const response = await fetch(`/api/admin/users/sessions?userId=${userId}`, {
         method: 'DELETE',
       })
-
       if (!response.ok) {
         throw new Error('Failed to terminate sessions')
       }
-
       const data = await response.json()
-      toast.success(`Terminated ${data.deletedSessions} session(s)`)
       fetchUsers()
     } catch (error) {
-      toast.error("Failed to terminate sessions")
     }
   }
-
   const columns: ColumnDef<User>[] = [
     {
       id: "select",
@@ -333,9 +302,7 @@ async function fetchUsers() {
         const user = row.original
         const canManage = currentUser.role === 'super_admin' || 
           (currentUser.role === 'admin' && user.country === currentUser.country)
-
         if (!canManage) return null
-
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -388,7 +355,6 @@ async function fetchUsers() {
       },
     },
   ]
-
   const table = useReactTable({
     data: users,
     columns,
@@ -409,7 +375,6 @@ async function fetchUsers() {
       globalFilter,
     },
   })
-
   return (
     <div className='space-y-4'>
       {/* Toolbar */}
@@ -464,7 +429,6 @@ async function fetchUsers() {
         </div>
         <AddUserDialog currentUser={currentUser} onSuccess={fetchUsers} />
       </div>
-
       {/* Table */}
       <div className='rounded-md border'>
         <Table>
@@ -522,7 +486,6 @@ async function fetchUsers() {
           </TableBody>
         </Table>
       </div>
-
       {/* Pagination */}
       <div className='flex items-center justify-between'>
         <div className='flex-1 text-sm text-muted-foreground'>
@@ -573,7 +536,6 @@ async function fetchUsers() {
           </div>
         </div>
       </div>
-
       {/* Edit User Dialog */}
       {editingUser && (
         <EditUserDialog
@@ -587,4 +549,3 @@ async function fetchUsers() {
     </div>
   );
 }
-

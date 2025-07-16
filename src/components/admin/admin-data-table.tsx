@@ -1,7 +1,5 @@
 /** @format */
-
 "use client";
-
 import * as React from "react";
 import {
   ColumnDef,
@@ -25,7 +23,6 @@ import {
   IconLayoutColumns,
   IconPlus,
 } from "@tabler/icons-react";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,7 +49,6 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-
 interface AdminDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -67,7 +63,6 @@ interface AdminDataTableProps<TData, TValue> {
   error?: string | null;
   onRetry?: () => void;
 }
-
 export function AdminDataTable<TData, TValue>({
   columns,
   data,
@@ -87,7 +82,6 @@ export function AdminDataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [globalFilter, setGlobalFilter] = React.useState("");
-
   const table = useReactTable({
     data,
     columns,
@@ -110,9 +104,7 @@ export function AdminDataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     globalFilterFn: "includesString",
   });
-
   const selectedRows = table.getSelectedRowModel().rows;
-
   // Loading state
   if (isLoading && data.length === 0) {
     return (
@@ -142,7 +134,6 @@ export function AdminDataTable<TData, TValue>({
       </div>
     );
   }
-
   // Error state
   if (error) {
     return (
@@ -176,7 +167,6 @@ export function AdminDataTable<TData, TValue>({
       </div>
     );
   }
-
   return (
     <div className={cn("space-y-4", className)}>
       {/* Header */}
@@ -190,7 +180,6 @@ export function AdminDataTable<TData, TValue>({
           </div>
         </div>
       )}
-
       {/* Toolbar */}
       <div className="flex items-center justify-between">
         <div className="flex flex-1 items-center space-x-2">
@@ -208,7 +197,6 @@ export function AdminDataTable<TData, TValue>({
               </div>
             </div>
           )}
-
           {/* Selection info */}
           {selectedRows.length > 0 && (
             <div className="flex items-center space-x-2">
@@ -218,7 +206,6 @@ export function AdminDataTable<TData, TValue>({
             </div>
           )}
         </div>
-
         {/* Column visibility and Add button */}
         <div className="flex items-center space-x-2">
           {/* Column visibility */}
@@ -251,7 +238,6 @@ export function AdminDataTable<TData, TValue>({
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
-          
           {/* Add button */}
           {onAdd && (
             <Button onClick={onAdd} className="flex items-center gap-2">
@@ -261,7 +247,6 @@ export function AdminDataTable<TData, TValue>({
           )}
         </div>
       </div>
-
       {/* Table */}
 <div className="rounded-lg border">
         <Table>
@@ -308,7 +293,6 @@ export function AdminDataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-
       {/* Pagination */}
       <div className="flex items-center justify-between px-2">
         <div className="flex-1 text-sm text-muted-foreground">

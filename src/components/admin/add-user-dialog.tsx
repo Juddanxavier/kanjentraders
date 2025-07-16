@@ -1,13 +1,10 @@
 /** @format */
-
 "use client"
-
 import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { IconLoader2, IconUserPlus } from "@tabler/icons-react"
-
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -35,9 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { toast } from "sonner"
 import type { AuthUser } from "@/lib/auth/permissions"
-
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -46,18 +41,14 @@ const formSchema = z.object({
   country: z.string().min(1, "Country is required"),
   phoneNumber: z.string().optional(),
 })
-
 type FormData = z.infer<typeof formSchema>
-
 interface AddUserDialogProps {
   currentUser: AuthUser
   onSuccess?: () => void
 }
-
 export function AddUserDialog({ currentUser, onSuccess }: AddUserDialogProps) {
   const [open, setOpen] = React.useState(false)
   const [loading, setLoading] = React.useState(false)
-
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -69,11 +60,9 @@ export function AddUserDialog({ currentUser, onSuccess }: AddUserDialogProps) {
       phoneNumber: "",
     },
   })
-
   async function onSubmit(data: FormData) {
     try {
       setLoading(true)
-
       // Create user via API
       const response = await fetch("/api/admin/users/create", {
         method: "POST",
@@ -82,24 +71,19 @@ export function AddUserDialog({ currentUser, onSuccess }: AddUserDialogProps) {
         },
         body: JSON.stringify(data),
       })
-
       if (!response.ok) {
         const error = await response.json()
         throw new Error(error.message || "Failed to create user")
       }
-
-      toast.success("User created successfully")
       setOpen(false)
       form.reset()
       onSuccess?.()
     } catch (error) {
       console.error("Error creating user:", error)
-      toast.error(error instanceof Error ? error.message : "Failed to create user")
     } finally {
       setLoading(false)
     }
   }
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -135,7 +119,6 @@ export function AddUserDialog({ currentUser, onSuccess }: AddUserDialogProps) {
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="password"
@@ -157,7 +140,6 @@ export function AddUserDialog({ currentUser, onSuccess }: AddUserDialogProps) {
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="name"
@@ -175,7 +157,6 @@ export function AddUserDialog({ currentUser, onSuccess }: AddUserDialogProps) {
                 </FormItem>
               )}
             />
-
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -205,7 +186,6 @@ export function AddUserDialog({ currentUser, onSuccess }: AddUserDialogProps) {
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="country"
@@ -235,7 +215,6 @@ export function AddUserDialog({ currentUser, onSuccess }: AddUserDialogProps) {
                 )}
               />
             </div>
-
             <FormField
               control={form.control}
               name="phoneNumber"
@@ -254,7 +233,6 @@ export function AddUserDialog({ currentUser, onSuccess }: AddUserDialogProps) {
                 </FormItem>
               )}
             />
-
             <DialogFooter>
               <Button
                 type="button"

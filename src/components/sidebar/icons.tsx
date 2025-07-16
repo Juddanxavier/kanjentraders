@@ -1,7 +1,5 @@
 /** @format */
-
 import { ArrowLeft, LogOut, LucideProps } from 'lucide-react';
-
 export const Icons = {
   ArrowLeft: (props: LucideProps) => <ArrowLeft {...props} />,
   LogOut: (props: LucideProps) => <LogOut {...props} />,

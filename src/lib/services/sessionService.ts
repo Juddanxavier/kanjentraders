@@ -1,15 +1,12 @@
 /** @format */
-
 import { auth } from '@/lib/auth/auth';
 import { authClient } from '@/lib/auth/auth-client';
 import { type AuthUser } from '@/lib/auth/permissions';
 import { headers } from 'next/headers';
-
 /**
  * Session Service
  * Centralized session management for both server and client components
  */
-
 /**
  * Get session in server components/API routes
  * @param requestHeaders - Optional headers, will use next/headers if not provided
@@ -20,11 +17,9 @@ export async function getServerSession(requestHeaders?: Headers) {
     const session = await auth.api.getSession({
       headers: requestHeaders || (await headers())
     });
-    
     if (!session?.user) {
       return null;
     }
-    
     // Better-Auth automatically handles cookie caching
     // No need for manual Redis caching
     return {
@@ -39,7 +34,6 @@ export async function getServerSession(requestHeaders?: Headers) {
     return null;
   }
 }
-
 /**
  * Get session in client components
  * Uses the authClient for client-side session retrieval
@@ -47,11 +41,9 @@ export async function getServerSession(requestHeaders?: Headers) {
 export async function getClientSession() {
   try {
     const session = await authClient.getSession();
-    
     if (!session?.user) {
       return null;
     }
-    
     return {
       user: session.user as AuthUser,
       session
@@ -61,7 +53,6 @@ export async function getClientSession() {
     return null;
   }
 }
-
 /**
  * Get user role from session
  * @param isClient - Whether this is being called from client side
@@ -70,7 +61,6 @@ export async function getUserRole(isClient: boolean = false): Promise<AuthUser['
   const sessionData = isClient ? await getClientSession() : await getServerSession();
   return sessionData?.user.role || null;
 }
-
 /**
  * Check if user is authenticated
  * @param isClient - Whether this is being called from client side
@@ -79,7 +69,6 @@ export async function isAuthenticated(isClient: boolean = false): Promise<boolea
   const sessionData = isClient ? await getClientSession() : await getServerSession();
   return !!sessionData;
 }
-
 /**
  * Get redirect path based on user role
  * @param role - User role

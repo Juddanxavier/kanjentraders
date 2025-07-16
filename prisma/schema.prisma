@@ -35,7 +35,6 @@ model User {
   assignedLeads Lead[]    @relation("AssignedLeads")
   createdLeads  Lead[]    @relation("CreatedLeads")
   notifications Notification[]
-  notificationSettings NotificationSettings?
 
   @@map("user")
 }
@@ -165,6 +164,42 @@ enum LeadStatus {
   FAILED
 }
 
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?            // Additional payload data
+  readAt    DateTime?
+  actionUrl String?
+  priority  Int              @default(0) // 0=low, 1=medium, 2=high, 3=urgent
+  createdAt DateTime         @default(now())
+  expiresAt DateTime?
+
+  @@index([userId, readAt])
+  @@index([createdAt])
+  @@index([expiresAt])
+  @@map("notification")
+}
+
+enum NotificationType {
+  SYSTEM_MAINTENANCE
+  SYSTEM_FEATURE
+  SYSTEM_SECURITY
+  SHIPMENT_CREATED
+  SHIPMENT_STATUS_UPDATE
+  SHIPMENT_DELIVERED
+  SHIPMENT_EXCEPTION
+  LEAD_ASSIGNED
+  LEAD_STATUS_CHANGE
+  LEAD_CONVERTED
+  USER_WELCOME
+  USER_ROLE_CHANGE
+  USER_ACCOUNT_LOCKED
+}
+
 enum ShipmentStatus {
   PENDING       // Shipment created but not yet picked up
   IN_TRANSIT    // Package is on the way
@@ -176,139 +211,3 @@ enum ShipmentStatus {
   UNKNOWN       // Status unknown or not updated
 }
 
-model Notification {
-  id            String            @id @default(cuid())
-  userId        String?
-  user          User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Notification Content
-  title         String
-  description   String?
-  variant       NotificationVariant @default(DEFAULT)
-  category      NotificationCategory @default(SYSTEM)
-  priority      NotificationPriority @default(NORMAL)
-  
-  // Notification Behavior
-  persistent    Boolean           @default(false)
-  channel       NotificationChannel @default(BOTH)
-  
-  // Status
-  read          Boolean           @default(false)
-  dismissed     Boolean           @default(false)
-  
-  // Metadata
-  data          Json?             // Additional data for the notification
-  actions       Json?             // Actions available for the notification
-  groupId       String?           // For grouping similar notifications
-  
-  // Related entities
-  leadId        String?
-  shipmentId    String?
-  
-  // Timestamps
-  readAt        DateTime?
-  dismissedAt   DateTime?
-  expiresAt     DateTime?         // For auto-expiring notifications
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-  
-  @@index([userId])
-  @@index([category])
-  @@index([priority])
-  @@index([read])
-  @@index([dismissed])
-  @@index([createdAt])
-  @@index([groupId])
-  @@map("notification")
-}
-
-model NotificationSettings {
-  id            String   @id @default(cuid())
-  userId        String   @unique
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // General Settings
-  enabled       Boolean  @default(true)
-  
-  // Channel Preferences
-  toastEnabled  Boolean  @default(true)
-  centerEnabled Boolean  @default(true)
-  soundEnabled  Boolean  @default(true)
-  emailEnabled  Boolean  @default(false)
-  
-  // Category Settings
-  authEnabled     Boolean @default(true)
-  systemEnabled   Boolean @default(true)
-  userEnabled     Boolean @default(true)
-  shipmentEnabled Boolean @default(true)
-  adminEnabled    Boolean @default(true)
-  leadEnabled     Boolean @default(true)
-  
-  // Behavior Settings
-  groupSimilar    Boolean @default(true)
-  maxToasts       Int     @default(5)
-  defaultDuration Int     @default(5000)
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  
-  @@map("notification_settings")
-}
-
-model NotificationTemplate {
-  id            String            @id @default(cuid())
-  name          String            @unique
-  category      NotificationCategory
-  
-  // Template Content
-  title         String
-  description   String?
-  variant       NotificationVariant @default(DEFAULT)
-  priority      NotificationPriority @default(NORMAL)
-  
-  // Template Settings
-  persistent    Boolean           @default(false)
-  channel       NotificationChannel @default(BOTH)
-  
-  // Template Variables (for dynamic content)
-  variables     Json?             // List of variables that can be replaced
-  
-  // Status
-  active        Boolean           @default(true)
-  
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-  
-  @@map("notification_template")
-}
-
-enum NotificationVariant {
-  DEFAULT
-  SUCCESS
-  ERROR
-  WARNING
-  INFO
-}
-
-enum NotificationCategory {
-  AUTH
-  SYSTEM
-  USER
-  SHIPMENT
-  ADMIN
-  LEAD
-}
-
-enum NotificationPriority {
-  LOW
-  NORMAL
-  HIGH
-  CRITICAL
-}
-
-enum NotificationChannel {
-  TOAST
-  CENTER
-  BOTH
-  EMAIL
-}

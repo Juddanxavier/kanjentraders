@@ -1,9 +1,7 @@
 import { z } from 'zod';
-
 const envSchema = z.object({
   // Node environment
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  
   // Authentication - only required in production
   BETTER_AUTH_SECRET: z
     .string()
@@ -14,7 +12,6 @@ const envSchema = z.object({
       }
       return true;
     }, 'BETTER_AUTH_SECRET must be at least 32 characters long in production'),
-  
   BETTER_AUTH_URL: z
     .string()
     .default('http://localhost:3000')
@@ -26,7 +23,6 @@ const envSchema = z.object({
         return false;
       }
     }, 'BETTER_AUTH_URL must be a valid URL'),
-  
   // Database - only required in production
   DATABASE_URL: z
     .string()
@@ -37,7 +33,6 @@ const envSchema = z.object({
       }
       return true;
     }, 'DATABASE_URL is required in production'),
-  
   // API
   NEXT_PUBLIC_API_URL: z
     .string()
@@ -50,7 +45,6 @@ const envSchema = z.object({
         return false;
       }
     }, 'NEXT_PUBLIC_API_URL must be a valid URL'),
-  
   // Optional environment variables
   REDIS_URL: z.string().optional(),
   SMTP_HOST: z.string().optional(),
@@ -63,7 +57,6 @@ const envSchema = z.object({
     .transform((val) => val === 'true'),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 });
-
 function validateEnv() {
   try {
     return envSchema.parse(process.env);
@@ -77,13 +70,11 @@ function validateEnv() {
       } else {
         console.error('  - Unknown validation error');
       }
-      
       // In Edge Runtime, we can't use process.exit, so just throw an error
       throw new Error('Environment validation failed. Check your environment variables.');
     }
     throw error;
   }
 }
-
 export const env = validateEnv();
 export type Env = z.infer<typeof envSchema>;

@@ -1,7 +1,5 @@
 /** @format */
-
 'use client';
-
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -14,7 +12,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-
 const pathMap: Record<string, string> = {
   '/admin': 'Admin',
   '/admin/dashboard': 'Dashboard',
@@ -30,26 +27,21 @@ const pathMap: Record<string, string> = {
   '/admin/help': 'Help',
   '/admin/profile': 'Profile',
 };
-
 export function AdminBreadcrumb() {
   const pathname = usePathname();
-  
   // Split pathname into segments
   const segments = pathname.split('/').filter(Boolean);
-  
   // Build breadcrumb items
   const breadcrumbItems = segments.map((segment, index) => {
     const path = '/' + segments.slice(0, index + 1).join('/');
     const isLast = index === segments.length - 1;
     const title = pathMap[path] || segment.charAt(0).toUpperCase() + segment.slice(1);
-    
     return {
       title,
       path,
       isLast,
     };
   });
-
   return (
     <Breadcrumb>
       <BreadcrumbList>

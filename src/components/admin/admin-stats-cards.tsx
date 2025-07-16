@@ -1,7 +1,5 @@
 /** @format */
-
 "use client";
-
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +10,6 @@ import {
   IconMinus,
   IconLoader,
 } from "@tabler/icons-react";
-
 interface StatCard {
   title: string;
   value: string | number;
@@ -26,13 +23,11 @@ interface StatCard {
   isLoading?: boolean;
   className?: string;
 }
-
 interface AdminStatsCardsProps {
   cards: StatCard[];
   className?: string;
   columns?: 1 | 2 | 3 | 4 | 5 | 6;
 }
-
 export function AdminStatsCards({ 
   cards, 
   className,
@@ -56,7 +51,6 @@ export function AdminStatsCards({
         return "grid-cols-1 md:grid-cols-2 lg:grid-cols-4";
     }
   };
-
   return (
     <div className={cn("grid gap-4", getGridClass(), className)}>
       {cards.map((card, index) => (
@@ -65,7 +59,6 @@ export function AdminStatsCards({
     </div>
   );
 }
-
 function StatCard({
   title,
   value,
@@ -87,7 +80,6 @@ function StatCard({
         return null;
     }
   };
-
   const getTrendColor = (type: "up" | "down" | "neutral") => {
     switch (type) {
       case "up":
@@ -100,7 +92,6 @@ function StatCard({
         return "text-muted-foreground";
     }
   };
-
   return (
     <Card className={cn("admin-stat-card", className)}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -119,7 +110,6 @@ function StatCard({
               {typeof value === "number" ? value.toLocaleString() : value}
             </div>
           )}
-          
           {trend && !isLoading && (
             <div className="flex items-center gap-1 text-xs">
               {getTrendIcon(trend.type)}
@@ -129,7 +119,6 @@ function StatCard({
               <span className="text-muted-foreground">{trend.label}</span>
             </div>
           )}
-          
           {description && (
             <p className="admin-stat-description">{description}</p>
           )}
@@ -138,7 +127,6 @@ function StatCard({
     </Card>
   );
 }
-
 // Pre-built common stat cards
 export const CommonStatCards = {
   users: (count: number, isLoading?: boolean) => ({
@@ -147,7 +135,6 @@ export const CommonStatCards = {
     icon: <IconTrendingUp className="h-4 w-4" />,
     isLoading,
   }),
-  
   activeUsers: (count: number, trend?: number, isLoading?: boolean) => ({
     title: "Active Users",
     value: count,
@@ -158,7 +145,6 @@ export const CommonStatCards = {
     } : undefined,
     isLoading,
   }),
-  
   revenue: (amount: number, currency: string = "$", trend?: number, isLoading?: boolean) => ({
     title: "Revenue",
     value: `${currency}${amount.toLocaleString()}`,
@@ -169,7 +155,6 @@ export const CommonStatCards = {
     } : undefined,
     isLoading,
   }),
-  
   orders: (count: number, trend?: number, isLoading?: boolean) => ({
     title: "Orders",
     value: count,
@@ -180,14 +165,12 @@ export const CommonStatCards = {
     } : undefined,
     isLoading,
   }),
-  
   parcels: (count: number, description?: string, isLoading?: boolean) => ({
     title: "Total Parcels",
     value: count,
     description,
     isLoading,
   }),
-  
   leads: (count: number, trend?: number, isLoading?: boolean) => ({
     title: "Leads",
     value: count,

@@ -1,15 +1,11 @@
 /** @format */
-
 'use client';
-
 import React from 'react';
 import { useLeadStore } from '@/store/lead-store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, UserCheck, Truck, AlertCircle, TrendingUp } from 'lucide-react';
-
 export default function LeadsStats() {
   const { stats } = useLeadStore();
-
   if (!stats) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -27,7 +23,6 @@ export default function LeadsStats() {
       </div>
     );
   }
-
   const statCards = [
     {
       title: 'Total Leads',
@@ -65,7 +60,6 @@ export default function LeadsStats() {
       bgColor: 'bg-indigo-100',
     },
   ];
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
       {statCards.map((stat) => (

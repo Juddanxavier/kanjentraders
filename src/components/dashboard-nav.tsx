@@ -1,9 +1,7 @@
 /** @format */
 'use client';
-
 import { LogoutButton } from '@/components/auth/logout-button';
 import { ThemeToggle } from '@/components/theme-toggle';
-
 interface DashboardNavProps {
   user: {
     name?: string | null;
@@ -11,7 +9,6 @@ interface DashboardNavProps {
     role?: string | null;
   } | null;
 }
-
 export function DashboardNav({ user }: DashboardNavProps) {
   return (
     <nav className="dashboard-nav">

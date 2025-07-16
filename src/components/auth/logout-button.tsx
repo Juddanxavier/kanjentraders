@@ -1,12 +1,9 @@
 /** @format */
 'use client';
-
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth/auth-client';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-
 /**
  * LOGOUT BUTTON COMPONENT
  * 
@@ -16,37 +13,26 @@ import { toast } from 'sonner';
  * - Error handling
  * - Redirect to signin
  */
-
 export function LogoutButton() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-
   const handleLogout = async () => {
     setIsLoading(true);
-    
     try {
       // Sign out using Better Auth
       const { error } = await authClient.signOut();
-      
       if (error) {
-        toast.error('Logout failed: ' + error.message);
         return;
       }
-      
       // Show success message
-      toast.success('Logged out successfully');
-      
       // Redirect to signin page
       router.push('/signin');
-      
     } catch (error) {
       console.error('Logout error:', error);
-      toast.error('An unexpected error occurred during logout');
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };
-
   return (
     <Button
       onClick={handleLogout}
@@ -59,7 +45,6 @@ export function LogoutButton() {
     </Button>
   );
 }
-
 /**
  * SECURITY FEATURES:
  * 

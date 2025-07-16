@@ -1,5 +1,4 @@
 /** @format */
-
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth/auth';
 import { redirect } from 'next/navigation';
@@ -12,18 +11,15 @@ import { AdminSiteHeader } from '@/components/admin-site-header';
 import { AppSidebar } from '@/components/app-sidebar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
-
 export default async function AdminProfilePage() {
   // Get session for admin info
   const session = await auth.api.getSession({
     headers: await headers(),
   });
-
   // This should never happen due to middleware validation
   if (!session?.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) {
     redirect('/dashboard');
   }
-
   return (
     <SidebarProvider
       style={
@@ -45,7 +41,6 @@ export default async function AdminProfilePage() {
                 Manage your account settings and preferences
               </p>
             </div>
-
             {/* Main Content Grid */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {/* Profile Information Card */}
@@ -60,7 +55,6 @@ export default async function AdminProfilePage() {
                   <ProfileForm user={session.user} />
                 </CardContent>
               </Card>
-
               {/* Password & Security Card */}
               <Card className="md:col-span-1">
                 <CardHeader>
@@ -73,7 +67,6 @@ export default async function AdminProfilePage() {
                   <PasswordChangeForm />
                 </CardContent>
               </Card>
-
               {/* Two-Factor Authentication Card */}
               <Card className="md:col-span-1">
                 <CardHeader>
@@ -98,7 +91,6 @@ export default async function AdminProfilePage() {
                   </div>
                 </CardContent>
               </Card>
-
               {/* Active Sessions Card - Full Width */}
               <Card className="md:col-span-2 lg:col-span-3">
                 <CardHeader>

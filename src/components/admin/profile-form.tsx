@@ -1,6 +1,5 @@
 /** @format */
 'use client';
-
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,11 +16,9 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, Upload } from 'lucide-react';
 import { authClient } from '@/lib/auth/auth-client';
-
 const profileFormSchema = z.object({
   name: z.string().min(2, {
     message: 'Name must be at least 2 characters.',
@@ -31,9 +28,7 @@ const profileFormSchema = z.object({
   }),
   image: z.string().optional(),
 });
-
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
-
 interface ProfileFormProps {
   user: {
     id: string;
@@ -42,11 +37,9 @@ interface ProfileFormProps {
     image?: string | null;
   };
 }
-
 export function ProfileForm({ user }: ProfileFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -55,31 +48,24 @@ export function ProfileForm({ user }: ProfileFormProps) {
       image: user.image || '',
     },
   });
-
   async function onSubmit(data: ProfileFormValues) {
     setIsLoading(true);
-
     try {
       // Update user profile using Better Auth
       const response = await authClient.updateUser({
         name: data.name,
         image: data.image,
       });
-
       if (response.error) {
         throw new Error(response.error.message);
       }
-
-      toast.success('Profile updated successfully');
       router.refresh();
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to update profile');
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   }
-
   const getInitials = (name?: string | null, email?: string) => {
     if (name) {
       return name
@@ -91,7 +77,6 @@ export function ProfileForm({ user }: ProfileFormProps) {
     }
     return email?.slice(0, 2).toUpperCase() || 'U';
   };
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -110,7 +95,6 @@ export function ProfileForm({ user }: ProfileFormProps) {
             </p>
           </div>
         </div>
-
         <FormField
           control={form.control}
           name="name"
@@ -127,7 +111,6 @@ export function ProfileForm({ user }: ProfileFormProps) {
             </FormItem>
           )}
         />
-
         <FormField
           control={form.control}
           name="email"
@@ -144,7 +127,6 @@ export function ProfileForm({ user }: ProfileFormProps) {
             </FormItem>
           )}
         />
-
         <div className="flex gap-2">
           <Button type="submit" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

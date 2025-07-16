@@ -1,5 +1,4 @@
 "use client"
-
 import * as React from "react"
 import {
   closestCenter,
@@ -49,9 +48,7 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table"
-import { toast } from "sonner"
 import { z } from "zod"
-
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -98,7 +95,6 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-
 export const schema = z.object({
   id: z.number(),
   header: z.string(),
@@ -108,13 +104,11 @@ export const schema = z.object({
   limit: z.string(),
   reviewer: z.string(),
 })
-
 // Create a separate component for the drag handle
 function DragHandle({ id }: { id: number }) {
   const { attributes, listeners } = useSortable({
     id,
   })
-
   return (
     <Button
       {...attributes}
@@ -128,7 +122,6 @@ function DragHandle({ id }: { id: number }) {
     </Button>
   )
 }
-
 const columns: ColumnDef<z.infer<typeof schema>>[] = [
   {
     id: "drag",
@@ -201,11 +194,6 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       <form
         onSubmit={(e) => {
           e.preventDefault()
-          toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
-            loading: `Saving ${row.original.header}`,
-            success: "Done",
-            error: "Error",
-          })
         }}
       >
         <Label htmlFor={`${row.original.id}-target`} className="sr-only">
@@ -226,11 +214,6 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       <form
         onSubmit={(e) => {
           e.preventDefault()
-          toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
-            loading: `Saving ${row.original.header}`,
-            success: "Done",
-            error: "Error",
-          })
         }}
       >
         <Label htmlFor={`${row.original.id}-limit`} className="sr-only">
@@ -249,11 +232,9 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     header: "Reviewer",
     cell: ({ row }) => {
       const isAssigned = row.original.reviewer !== "Assign reviewer"
-
       if (isAssigned) {
         return row.original.reviewer
       }
-
       return (
         <>
           <Label htmlFor={`${row.original.id}-reviewer`} className="sr-only">
@@ -303,12 +284,10 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     ),
   },
 ]
-
 function DraggableRow<TData>({ row }: { row: Row<TData> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: (row.original as any).id,
   })
-
   return (
     <TableRow
       data-state={row.getIsSelected() && "selected"}
@@ -328,7 +307,6 @@ function DraggableRow<TData>({ row }: { row: Row<TData> }) {
     </TableRow>
   )
 }
-
 export function DataTable<TData>({
   data: initialData,
   userRole,
@@ -358,15 +336,12 @@ export function DataTable<TData>({
     useSensor(TouchSensor, {}),
     useSensor(KeyboardSensor, {})
   )
-
   // Use custom columns if provided, otherwise use default columns
   const columnsToUse = customColumns || columns
-  
   const dataIds = React.useMemo<UniqueIdentifier[]>(
     () => data?.map((item: any) => item.id) || [],
     [data]
   )
-
   const table = useReactTable({
     data,
     columns: columnsToUse,
@@ -391,7 +366,6 @@ export function DataTable<TData>({
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
   })
-
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
     if (active && over && active.id !== over.id) {
@@ -402,7 +376,6 @@ export function DataTable<TData>({
       })
     }
   }
-
   return (
     <Tabs
       defaultValue="outline"
@@ -628,7 +601,6 @@ export function DataTable<TData>({
     </Tabs>
   )
 }
-
 const statsData = [
   { month: "January", desktop: 186, mobile: 80 },
   { month: "February", desktop: 305, mobile: 200 },
@@ -637,10 +609,8 @@ const statsData = [
   { month: "May", desktop: 209, mobile: 130 },
   { month: "June", desktop: 214, mobile: 140 },
 ]
-
 function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
   const isMobile = useIsMobile()
-
   return (
     <Drawer direction={isMobile ? "bottom" : "right"}>
       <DrawerTrigger asChild>

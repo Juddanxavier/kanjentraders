@@ -5,19 +5,15 @@ import { AdminSiteHeader } from '@/components/admin-site-header';
 import { ShipmentManagement } from '@/components/admin/shipments/shipment-management';
 import { auth } from '@/lib/auth/auth';
 import { headers } from 'next/headers';
-
 export const metadata: Metadata = {
   title: 'Shipments - Admin Dashboard',
   description: 'Manage shipments and tracking information',
 };
-
 export default async function ShipmentsPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
-
   const user = session?.user;
-
   return (
     <SidebarProvider
       style={

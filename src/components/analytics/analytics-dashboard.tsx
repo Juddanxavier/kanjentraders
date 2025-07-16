@@ -1,18 +1,14 @@
 /** @format */
-
 'use client';
-
 import { UserAnalyticsCard } from './user-analytics-card';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { IconActivity, IconTrendingUp, IconUserCheck } from '@tabler/icons-react';
-
 export function AnalyticsDashboard() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* User Analytics Card */}
         <UserAnalyticsCard />
-        
         {/* User Activity Trend Card */}
         <Card>
           <CardHeader>
@@ -28,7 +24,6 @@ export function AnalyticsDashboard() {
             </div>
           </CardContent>
         </Card>
-        
         {/* User Growth Card */}
         <Card>
           <CardHeader>
@@ -45,7 +40,6 @@ export function AnalyticsDashboard() {
           </CardContent>
         </Card>
       </div>
-      
       {/* Detailed Analytics Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
@@ -76,7 +70,6 @@ export function AnalyticsDashboard() {
             </div>
           </CardContent>
         </Card>
-        
         <Card>
           <CardHeader>
             <CardTitle>User Engagement</CardTitle>

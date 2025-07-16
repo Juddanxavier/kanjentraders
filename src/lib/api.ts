@@ -1,9 +1,7 @@
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { env } from './env';
-
 // API configuration
 const API_URL = env.NEXT_PUBLIC_API_URL;
-
 // Create axios instance with enhanced security
 export const api = axios.create({
   baseURL: `${API_URL}/api`,
@@ -16,7 +14,6 @@ export const api = axios.create({
   // Validate status codes
   validateStatus: (status) => status < 500, // Don't throw on 4xx errors
 });
-
 // Request interceptor for security headers and logging
 api.interceptors.request.use(
   (config: AxiosRequestConfig) => {
@@ -28,14 +25,12 @@ api.interceptors.request.use(
         'X-CSRF-Token': csrfToken,
       };
     }
-
     // Add request ID for tracking
     const requestId = crypto.randomUUID();
     config.headers = {
       ...config.headers,
       'X-Request-ID': requestId,
     };
-
     // Log request in development
     if (env.NODE_ENV === 'development' && env.LOG_LEVEL === 'debug') {
       console.log('API Request:', {
@@ -45,7 +40,6 @@ api.interceptors.request.use(
         timestamp: new Date().toISOString(),
       });
     }
-
     return config;
   },
   (error) => {
@@ -53,7 +47,6 @@ api.interceptors.request.use(
     return Promise.reject(error);
   }
 );
-
 // Response interceptor for error handling and logging
 api.interceptors.response.use(
   (response: AxiosResponse) => {
@@ -66,7 +59,6 @@ api.interceptors.response.use(
         timestamp: new Date().toISOString(),
       });
     }
-
     return response;
   },
   (error: AxiosError) => {
@@ -80,9 +72,7 @@ api.interceptors.response.use(
       message: error.message,
       timestamp: new Date().toISOString(),
     };
-
     console.error('API Error:', errorInfo);
-
     // Handle specific error cases
     if (error.response?.status === 401) {
       // Unauthorized - redirect to login
@@ -90,21 +80,17 @@ api.interceptors.response.use(
         window.location.href = '/signin?error=session_expired';
       }
     }
-
     if (error.response?.status === 403) {
       // Forbidden - show appropriate message
       console.warn('Access forbidden:', error.response.data);
     }
-
     if (error.response?.status === 429) {
       // Rate limited
       console.warn('Rate limited. Please try again later.');
     }
-
     return Promise.reject(error);
   }
 );
-
 // CSRF token management
 function getCsrfToken(): string | null {
   if (typeof window !== 'undefined') {
@@ -113,7 +99,6 @@ function getCsrfToken(): string | null {
     if (metaTag) {
       return metaTag.getAttribute('content');
     }
-
     // Try to get from cookie
     const cookies = document.cookie.split(';');
     for (const cookie of cookies) {
@@ -125,7 +110,6 @@ function getCsrfToken(): string | null {
   }
   return null;
 }
-
 // Enhanced API utilities
 export const createSecureRequest = (config: AxiosRequestConfig) => {
   return {
@@ -136,7 +120,6 @@ export const createSecureRequest = (config: AxiosRequestConfig) => {
     },
   };
 };
-
 // Auth API functions with enhanced security
 export const authApi = {
   signUp: (data: {
@@ -150,14 +133,10 @@ export const authApi = {
     postalCode?: string;
     role?: string;
   }) => api.post('/auth/signup', data, createSecureRequest({})),
-
   signIn: (data: { email: string; password: string }) =>
     api.post('/auth/signin', data, createSecureRequest({})),
-
   signOut: () => api.post('/auth/signout', {}, createSecureRequest({})),
-
   getMe: () => api.get('/auth/me', createSecureRequest({})),
-
   updateProfile: (data: {
     name?: string;
     phoneNumber?: string;
@@ -168,34 +147,25 @@ export const authApi = {
     role?: string;
     image?: string;
   }) => api.put('/auth/update-profile', data, createSecureRequest({})),
-
   changePassword: (data: { currentPassword: string; newPassword: string }) =>
     api.post('/auth/change-password', data, createSecureRequest({})),
-
   getSessions: () => api.get('/auth/sessions', createSecureRequest({})),
-
   revokeSession: (sessionId: string) =>
     api.post('/auth/revoke-session', { sessionId }, createSecureRequest({})),
-
   requestPasswordReset: (email: string) =>
     api.post('/auth/password-reset', { email }, createSecureRequest({})),
-
   resetPassword: (data: { token: string; password: string }) =>
     api.post('/auth/password-reset/confirm', data, createSecureRequest({})),
-
   verifyEmail: (token: string) =>
     api.post('/auth/verify-email', { token }, createSecureRequest({})),
-
   resendVerificationEmail: () =>
     api.post('/auth/verify-email/resend', {}, createSecureRequest({})),
 };
-
 // Health check API
 export const healthApi = {
   check: () => api.get('/health', createSecureRequest({})),
   database: () => api.get('/health/database', createSecureRequest({})),
 };
-
 // Error handling utilities
 export const handleApiError = (error: AxiosError) => {
   if (error.response?.data) {
@@ -207,14 +177,12 @@ export const handleApiError = (error: AxiosError) => {
       details: errorData.details,
     };
   }
-  
   return {
     message: error.message || 'Network error',
     status: 0,
     code: 'NETWORK_ERROR',
   };
 };
-
 // Types
 export interface User {
   id: string;
@@ -231,7 +199,6 @@ export interface User {
   createdAt: Date;
   updatedAt: Date;
 }
-
 export interface Session {
   id: string;
   expiresAt: Date;
@@ -242,7 +209,6 @@ export interface Session {
   userAgent?: string;
   userId: string;
 }
-
 export interface AuthResponse {
   success: boolean;
   message?: string;
@@ -250,14 +216,12 @@ export interface AuthResponse {
   token?: string;
   session?: Session;
 }
-
 export interface ApiError {
   message: string;
   status: number;
   code?: string;
   details?: any;
 }
-
 export interface HealthStatus {
   status: 'healthy' | 'unhealthy';
   timestamp: string;

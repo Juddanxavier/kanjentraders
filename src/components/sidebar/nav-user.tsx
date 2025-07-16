@@ -1,15 +1,11 @@
 /** @format */
-
 'use client';
-
 import {
   IconCreditCard,
   IconDotsVertical,
   IconLogout,
-  IconNotification,
   IconUserCircle,
 } from '@tabler/icons-react';
-
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -29,17 +25,14 @@ import {
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-
 export function NavUser() {
   const { isMobile } = useSidebar();
   const router = useRouter();
   const { user, signOut } = useAuth();
   const [pending, setPending] = useState(false);
-  
   if (pending || !user) {
     return null;
   }
-  
   const handleSignout = async () => {
     try {
       setPending(true);
@@ -125,10 +118,6 @@ export function NavUser() {
               <DropdownMenuItem>
                 <IconCreditCard />
                 Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push('/notifications')}>
-                <IconNotification />
-                Notifications
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

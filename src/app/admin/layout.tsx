@@ -1,15 +1,41 @@
 /** @format */
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { auth } from '@/lib/auth/auth';
 
 /**
- * ADMIN LAYOUT - Renders the admin panel
+ * ADMIN LAYOUT - Renders the admin panel with proper session validation
  * 
- * Security is handled entirely by the middleware.
- * This layout simply renders the children (the admin pages).
+ * Security is handled by middleware + additional server-side checks
+ * This layout validates permissions and renders the admin UI
  */
-
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  // No security checks needed here - middleware does it all
-  return <>{children}</>;
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  // Additional server-side security check
+  const session = await auth.api.getSession({ headers: await headers() });
+  
+  // Double-check admin access (middleware should have already handled this)
+  if (!session?.user) {
+    redirect('/signin?error=session_required');
+  }
+  
+  const isAdmin = session.user.role === 'admin' || session.user.role === 'super_admin';
+  if (!isAdmin) {
+    redirect('/unauthorized');
+  }
+  
+  // Log admin access for security audit
+  console.log('🔐 Admin Access:', {
+    userId: session.user.id,
+    email: session.user.email,
+    role: session.user.role,
+    timestamp: new Date().toISOString(),
+  });
+  
+  return (
+    <>
+      {children}
+    </>
+  );
 }
 
 /**
@@ -17,7 +43,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
  * 
  * 1. Full database session validation
  * 2. Admin role verification
- * 3. Account ban status check
+ * 3. Account ban status check (handled by middleware)
  * 4. Secure error handling
  * 5. Audit logging
  * 6. Graceful fallback redirects

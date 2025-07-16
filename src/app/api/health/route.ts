@@ -1,21 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { checkDatabaseHealth, getPoolStats } from '@/lib/db';
 import { env } from '@/lib/env';
 
+// Database health check function
+async function checkDatabaseHealth() {
+  try {
+    // Dynamic import to avoid build-time issues
+    const { prisma } = await import('@/lib/db');
+    await prisma.$queryRaw`SELECT 1`;
+    return true;
+  } catch (error) {
+    console.error('Database health check failed:', error);
+    return false;
+  }
+}
+
+// Get pool stats (simplified)
+function getPoolStats() {
+  return {
+    active: 'unknown',
+    idle: 'unknown',
+    waiting: 'unknown',
+  };
+}
 export async function GET(request: NextRequest) {
   try {
     const startTime = Date.now();
-    
     // Check database connectivity
     const isDatabaseHealthy = await checkDatabaseHealth();
     const dbLatency = Date.now() - startTime;
-    
     // Get database pool statistics
     const poolStats = getPoolStats();
-    
     // Calculate uptime (simplified - in production, you might want to store app start time)
     const uptime = process.uptime();
-    
     const healthStatus = {
       status: isDatabaseHealthy ? 'healthy' : 'unhealthy',
       timestamp: new Date().toISOString(),
@@ -33,7 +49,6 @@ export async function GET(request: NextRequest) {
         limit: Math.round(process.memoryUsage().rss / 1024 / 1024),
       },
     };
-    
     return NextResponse.json(healthStatus, {
       status: isDatabaseHealthy ? 200 : 503,
       headers: {
@@ -44,7 +59,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Health check failed:', error);
-    
     return NextResponse.json(
       {
         status: 'unhealthy',
@@ -56,7 +70,6 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
 // Simplified health check for load balancers
 export async function HEAD(request: NextRequest) {
   try {

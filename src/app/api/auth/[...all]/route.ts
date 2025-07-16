@@ -1,25 +1,30 @@
-/** @format */
-import { auth } from '@/lib/auth/auth';
-import { toNextJsHandler } from 'better-auth/next-js';
-import { NextRequest } from 'next/server';
-import { createErrorResponse, logAuthError } from '@/lib/auth/error-handler';
+import { auth } from "@/lib/auth/auth";
+import { toNextJsHandler } from "better-auth/next-js";
+import { NextRequest } from "next/server";
 
 const handler = toNextJsHandler(auth);
 
-export async function GET(req: NextRequest) {
-  try {
-    return await handler.GET(req);
-  } catch (error) {
-    logAuthError('GET_REQUEST', error, { url: req.url });
-    return createErrorResponse(error);
-  }
+// Handle all HTTP methods that better-auth might use
+export async function GET(request: NextRequest) {
+  return handler.GET(request);
 }
 
-export async function POST(req: NextRequest) {
-  try {
-    return await handler.POST(req);
-  } catch (error) {
-    logAuthError('POST_REQUEST', error, { url: req.url });
-    return createErrorResponse(error);
-  }
+export async function POST(request: NextRequest) {
+  return handler.POST(request);
+}
+
+export async function PUT(request: NextRequest) {
+  return handler.PUT?.(request) || new Response('Method not allowed', { status: 405 });
+}
+
+export async function DELETE(request: NextRequest) {
+  return handler.DELETE?.(request) || new Response('Method not allowed', { status: 405 });
+}
+
+export async function PATCH(request: NextRequest) {
+  return handler.PATCH?.(request) || new Response('Method not allowed', { status: 405 });
+}
+
+export async function OPTIONS(request: NextRequest) {
+  return handler.OPTIONS?.(request) || new Response('Method not allowed', { status: 405 });
 }

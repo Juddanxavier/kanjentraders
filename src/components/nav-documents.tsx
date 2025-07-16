@@ -1,5 +1,4 @@
 "use client"
-
 import {
   IconDots,
   IconFolder,
@@ -7,7 +6,6 @@ import {
   IconTrash,
   type Icon,
 } from "@tabler/icons-react"
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,7 +22,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-
 export function NavDocuments({
   items,
 }: {
@@ -35,7 +32,6 @@ export function NavDocuments({
   }[]
 }) {
   const { isMobile } = useSidebar()
-
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel>Documents</SidebarGroupLabel>

@@ -6,15 +6,12 @@ export function generateWhiteLabelTrackingId(): string {
   const prefix = 'GT';
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let result = prefix;
-  
   // Generate 8 random alphanumeric characters
   for (let i = 0; i < 8; i++) {
     result += characters.charAt(Math.floor(Math.random() * characters.length));
   }
-  
   return result;
 }
-
 /**
  * Validate a white label tracking ID format
  * @param trackingId - The tracking ID to validate
@@ -25,7 +22,6 @@ export function validateWhiteLabelTrackingId(trackingId: string): boolean {
   const pattern = /^GT[A-Z0-9]{8}$/;
   return pattern.test(trackingId);
 }
-
 /**
  * Check if a tracking ID is a white label tracking ID
  * @param trackingId - The tracking ID to check

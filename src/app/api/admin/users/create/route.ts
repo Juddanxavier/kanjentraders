@@ -1,19 +1,16 @@
 /** @format */
-
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth/auth';
 import { prisma } from '@/lib/prisma';
 import { canManageUsers } from '@/lib/auth/permissions';
 import type { AuthUser } from '@/lib/auth/permissions';
-import { hash } from 'better-auth/crypto';
-
+import bcrypt from 'bcryptjs';
 // POST /api/admin/users/create - Create a new user
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { email, password, name, role, country, phoneNumber } = body;
-
     // Validate required fields
     if (!email || !password || !name || !role || !country) {
       return NextResponse.json(
@@ -21,19 +18,15 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-
     // Get session
     const session = await auth.api.getSession({
       headers: await headers(),
     });
-
     const currentUser = session?.user as AuthUser | null;
-
     // Check permissions
     if (!currentUser || !canManageUsers(currentUser)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
     // Check if current user can create users in the specified country
     if (currentUser.role !== 'super_admin' && country !== currentUser.country) {
       return NextResponse.json(
@@ -41,7 +34,6 @@ export async function POST(request: Request) {
         { status: 403 }
       );
     }
-
     // Check if current user can assign the specified role
     if (role === 'super_admin' && currentUser.role !== 'super_admin') {
       return NextResponse.json(
@@ -49,22 +41,18 @@ export async function POST(request: Request) {
         { status: 403 }
       );
     }
-
     // Check if email already exists
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
-
     if (existingUser) {
       return NextResponse.json(
         { error: 'User with this email already exists' },
         { status: 409 }
       );
     }
-
     // Hash the password
-    const hashedPassword = await hash(password);
-
+    const hashedPassword = await bcrypt.hash(password, 10);
     // Create the user
     const newUser = await prisma.user.create({
       data: {
@@ -77,7 +65,6 @@ export async function POST(request: Request) {
         phoneNumberVerified: false,
       },
     });
-
     // Create an account record for the user (required by better-auth)
     await prisma.account.create({
       data: {
@@ -90,7 +77,6 @@ export async function POST(request: Request) {
         updatedAt: new Date(),
       },
     });
-
     // Log the admin action
     console.log('Admin created user:', {
       adminId: currentUser.id,
@@ -100,7 +86,6 @@ export async function POST(request: Request) {
       newUserRole: newUser.role,
       timestamp: new Date().toISOString(),
     });
-
     return NextResponse.json({
       success: true,
       user: {

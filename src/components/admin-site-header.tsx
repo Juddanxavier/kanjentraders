@@ -1,6 +1,5 @@
 /** @format */
 'use client';
-
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
@@ -15,12 +14,10 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { authClient } from "@/lib/auth/auth-client"
 import { useRouter } from "next/navigation"
-import { toast } from "sonner"
 import { User, LogOut, Settings } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { AdminBreadcrumb } from "@/components/admin-breadcrumb"
-import { NotificationBell } from "@/components/notifications/notification-bell"
-
+import { NotificationBell } from "@/components/notifications/NotificationBell"
 interface AdminSiteHeaderProps {
   user: {
     name?: string | null;
@@ -28,20 +25,15 @@ interface AdminSiteHeaderProps {
     image?: string | null;
   }
 }
-
 export function AdminSiteHeader({ user }: AdminSiteHeaderProps) {
   const router = useRouter();
-
   const handleSignOut = async () => {
     try {
       await authClient.signOut();
-      toast.success('Signed out successfully');
       router.push('/signin');
     } catch (error) {
-      toast.error('Failed to sign out');
-    }
+      }
   };
-
   // Get initials for avatar fallback
   const getInitials = (name?: string | null, email?: string) => {
     if (name) {
@@ -54,7 +46,6 @@ export function AdminSiteHeader({ user }: AdminSiteHeaderProps) {
     }
     return email?.slice(0, 2).toUpperCase() || 'AD';
   };
-
   return (
     <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
       <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
@@ -64,12 +55,9 @@ export function AdminSiteHeader({ user }: AdminSiteHeaderProps) {
           className="mx-2 data-[orientation=vertical]:h-4"
         />
         <AdminBreadcrumb />
-        
         <div className="ml-auto flex items-center gap-2">
           <ThemeToggle />
-          <div id="notification-bell">
-            <NotificationBell />
-          </div>
+          <NotificationBell />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">

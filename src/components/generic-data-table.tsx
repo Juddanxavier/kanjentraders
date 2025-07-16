@@ -1,7 +1,5 @@
 /** @format */
-
 "use client"
-
 import * as React from "react"
 import {
   DndContext,
@@ -44,7 +42,6 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table"
-
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -76,7 +73,6 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-
 interface GenericDataTableProps<T> {
   data: T[]
   columns: ColumnDef<T>[]
@@ -93,13 +89,11 @@ interface GenericDataTableProps<T> {
   filterPlaceholder?: string
   filterColumn?: string
 }
-
 // Create a separate component for the drag handle
 function DragHandle<T>({ id }: { id: UniqueIdentifier }) {
   const { attributes, listeners } = useSortable({
     id,
   })
-
   return (
     <Button
       {...attributes}
@@ -113,12 +107,10 @@ function DragHandle<T>({ id }: { id: UniqueIdentifier }) {
     </Button>
   )
 }
-
 function DraggableRow<T>({ row }: { row: Row<T> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.id,
   })
-
   return (
     <TableRow
       data-state={row.getIsSelected() && "selected"}
@@ -138,7 +130,6 @@ function DraggableRow<T>({ row }: { row: Row<T> }) {
     </TableRow>
   )
 }
-
 export function GenericDataTable<T>({
   data: initialData,
   columns,
@@ -160,18 +151,15 @@ export function GenericDataTable<T>({
     pageIndex: 0,
     pageSize: 10,
   })
-  
   const sensors = useSensors(
     useSensor(MouseSensor, {}),
     useSensor(TouchSensor, {}),
     useSensor(KeyboardSensor, {})
   )
-
   const dataIds = React.useMemo<UniqueIdentifier[]>(
     () => data?.map((_, index) => index) || [],
     [data]
   )
-
   const table = useReactTable({
     data,
     columns,
@@ -195,7 +183,6 @@ export function GenericDataTable<T>({
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
   })
-
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
     if (active && over && active.id !== over.id) {
@@ -206,7 +193,6 @@ export function GenericDataTable<T>({
       })
     }
   }
-
   const TableContent = () => (
     <div className="flex flex-col gap-6 px-4 lg:px-6">
       <div className="flex items-center justify-between gap-4">
@@ -254,7 +240,6 @@ export function GenericDataTable<T>({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-
       <div className="overflow-x-auto">
         {enableDragAndDrop ? (
           <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
@@ -352,7 +337,6 @@ export function GenericDataTable<T>({
           </Table>
         )}
       </div>
-      
       <div className="flex items-center justify-between px-4">
         <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
@@ -432,7 +416,6 @@ export function GenericDataTable<T>({
       </div>
     </div>
   )
-
   if (enableTabs && tabsConfig) {
     return (
       <Tabs
@@ -483,7 +466,6 @@ export function GenericDataTable<T>({
       </Tabs>
     )
   }
-
   return (
     <div className="w-full flex-col justify-start gap-6">
       <TableContent />

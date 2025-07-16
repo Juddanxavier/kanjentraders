@@ -1,6 +1,5 @@
 /** @format */
 'use client';
-
 import * as React from 'react';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
@@ -11,10 +10,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
 export function ThemeToggle() {
   const { setTheme, theme } = useTheme();
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -38,16 +35,13 @@ export function ThemeToggle() {
     </DropdownMenu>
   );
 }
-
 export function ThemeToggleSimple() {
   const { setTheme, theme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
-
   // Prevent hydration mismatch
   React.useEffect(() => {
     setMounted(true);
   }, []);
-
   if (!mounted) {
     return (
       <Button variant="outline" size="icon" disabled>
@@ -55,7 +49,6 @@ export function ThemeToggleSimple() {
       </Button>
     );
   }
-
   return (
     <Button
       variant="outline"

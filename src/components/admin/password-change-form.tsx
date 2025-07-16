@@ -1,6 +1,5 @@
 /** @format */
 'use client';
-
 import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -16,10 +15,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { authClient } from '@/lib/auth/auth-client';
-
 const passwordFormSchema = z.object({
   currentPassword: z.string().min(1, {
     message: 'Current password is required.',
@@ -32,12 +29,9 @@ const passwordFormSchema = z.object({
   message: "Passwords don't match",
   path: ['confirmPassword'],
 });
-
 type PasswordFormValues = z.infer<typeof passwordFormSchema>;
-
 export function PasswordChangeForm() {
   const [isLoading, setIsLoading] = useState(false);
-
   const form = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordFormSchema),
     defaultValues: {
@@ -46,31 +40,24 @@ export function PasswordChangeForm() {
       confirmPassword: '',
     },
   });
-
   async function onSubmit(data: PasswordFormValues) {
     setIsLoading(true);
-
     try {
       const response = await authClient.changePassword({
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
         revokeOtherSessions: true, // Log out from other devices
       });
-
       if (response.error) {
         throw new Error(response.error.message);
       }
-
-      toast.success('Password changed successfully');
       form.reset();
     } catch (error) {
       console.error('Error changing password:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to change password');
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   }
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -91,7 +78,6 @@ export function PasswordChangeForm() {
             </FormItem>
           )}
         />
-
         <FormField
           control={form.control}
           name="newPassword"
@@ -112,7 +98,6 @@ export function PasswordChangeForm() {
             </FormItem>
           )}
         />
-
         <FormField
           control={form.control}
           name="confirmPassword"
@@ -130,7 +115,6 @@ export function PasswordChangeForm() {
             </FormItem>
           )}
         />
-
         <Button type="submit" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Change Password

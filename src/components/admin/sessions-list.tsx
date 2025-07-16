@@ -1,14 +1,11 @@
 /** @format */
 'use client';
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { toast } from 'sonner';
 import { Loader2, Monitor, Smartphone, Tablet, MapPin, Clock } from 'lucide-react';
 import { authClient } from '@/lib/auth/auth-client';
 import { formatDistanceToNow } from 'date-fns';
-
 interface Session {
   id: string;
   userId: string;
@@ -19,16 +16,13 @@ interface Session {
   ipAddress?: string;
   userAgent?: string;
 }
-
 export function SessionsList({ currentSessionId }: { currentSessionId?: string }) {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [revokingSession, setRevokingSession] = useState<string | null>(null);
-
   useEffect(() => {
     fetchSessions();
   }, []);
-
   async function fetchSessions() {
     try {
       const response = await authClient.listSessions();
@@ -37,56 +31,44 @@ export function SessionsList({ currentSessionId }: { currentSessionId?: string }
       }
     } catch (error) {
       console.error('Error fetching sessions:', error);
-      toast.error('Failed to load sessions');
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   }
-
   async function revokeSession(sessionId: string) {
     setRevokingSession(sessionId);
     try {
       await authClient.revokeSession({ token: sessionId });
-      toast.success('Session revoked successfully');
       await fetchSessions(); // Refresh the list
     } catch (error) {
       console.error('Error revoking session:', error);
-      toast.error('Failed to revoke session');
-    } finally {
+      } finally {
       setRevokingSession(null);
     }
   }
-
   async function revokeAllOtherSessions() {
     if (!confirm('Are you sure you want to sign out from all other devices?')) {
       return;
     }
-
     setIsLoading(true);
     try {
       await authClient.revokeOtherSessions();
-      toast.success('All other sessions revoked successfully');
       await fetchSessions(); // Refresh the list
     } catch (error) {
       console.error('Error revoking sessions:', error);
-      toast.error('Failed to revoke sessions');
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   }
-
   function getDeviceIcon(userAgent?: string) {
     if (!userAgent) return <Monitor className="h-5 w-5" />;
-    
     const ua = userAgent.toLowerCase();
     if (ua.includes('mobile')) return <Smartphone className="h-5 w-5" />;
     if (ua.includes('tablet')) return <Tablet className="h-5 w-5" />;
     return <Monitor className="h-5 w-5" />;
   }
-
   function getDeviceInfo(userAgent?: string) {
     if (!userAgent) return 'Unknown device';
-    
     // Simple parsing - you might want to use a proper user agent parser
     const ua = userAgent.toLowerCase();
     if (ua.includes('chrome')) return 'Chrome';
@@ -95,7 +77,6 @@ export function SessionsList({ currentSessionId }: { currentSessionId?: string }
     if (ua.includes('edge')) return 'Edge';
     return 'Unknown browser';
   }
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -103,7 +84,6 @@ export function SessionsList({ currentSessionId }: { currentSessionId?: string }
       </div>
     );
   }
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -120,12 +100,10 @@ export function SessionsList({ currentSessionId }: { currentSessionId?: string }
           </Button>
         )}
       </div>
-
       <div className="space-y-3">
         {sessions.map((session) => {
           const isCurrent = session.id === currentSessionId;
           const createdAt = new Date(session.createdAt);
-          
           return (
             <Card key={session.id} className="p-4">
               <div className="flex items-start justify-between">

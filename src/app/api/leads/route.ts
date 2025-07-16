@@ -1,26 +1,21 @@
 /** @format */
-
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth/auth';
 import { LeadStatus } from '@/generated/prisma';
 import { CreateLeadData, LeadFilters } from '@/types/lead';
-import { getCountryFilter } from '@/lib/auth/permissions';
-
+import { getCountryFilter, AuthUser, UserRole } from '@/lib/auth/permissions';
 // Helper to validate if user is an admin
-const isAdmin = (role: string) => ['admin', 'super_admin'].includes(role);
-
+const isAdmin = (role: string | null | undefined) => role && ['admin', 'super_admin'].includes(role);
 // GET /api/leads - List leads with filtering and sorting
 export async function GET(request: NextRequest) {
   try {
     const session = await auth.api.getSession({
       headers: request.headers,
     });
-    
     if (!session?.user || !isAdmin(session.user.role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') as LeadStatus;
     const assignedToId = searchParams.get('assignedToId');
@@ -33,8 +28,12 @@ export async function GET(request: NextRequest) {
     const weightMax = searchParams.get('weightMax');
     const sortField = searchParams.get('sortField') || 'createdAt';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
-
-    const countryFilter = getCountryFilter(session.user);
+    const user = {
+      ...session.user,
+      role: session.user.role as UserRole || 'user',
+      country: session.user.country || 'India',
+    } as AuthUser;
+    const countryFilter = getCountryFilter(user);
     const leads = await prisma.lead.findMany({
       where: {
         ...(countryFilter && { country: countryFilter }),
@@ -60,44 +59,43 @@ export async function GET(request: NextRequest) {
         createdBy: { select: { id: true, name: true, email: true } },
       },
     });
-
+    
+    console.log('Leads API Debug:', { leadsCount: leads.length, countryFilter, status, sortField, sortOrder });
     return NextResponse.json(leads);
   } catch (error) {
     console.error('Error fetching leads:', error);
     return NextResponse.json({ error: 'Failed to fetch leads' }, { status: 500 });
   }
 }
-
 // POST /api/leads - Create a new lead
 export async function POST(request: NextRequest) {
   try {
     const session = await auth.api.getSession({
       headers: request.headers,
     });
-    
     if (!session?.user || !isAdmin(session.user.role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-
     const body = await request.json();
     const { name, email, phoneNumber, destination, origin, weight, assignedToId } = body as CreateLeadData;
-
     // Check if lead with email already exists in the admin's accessible scope
-    const countryFilter = getCountryFilter(session.user);
+    const user = {
+      ...session.user,
+      role: session.user.role as UserRole || 'user',
+      country: session.user.country || 'India',
+    } as AuthUser;
+    const countryFilter = getCountryFilter(user);
     const existingLead = await prisma.lead.findFirst({
       where: { 
         email,
         ...(countryFilter && { country: countryFilter })
       },
     });
-
     if (existingLead) {
       return NextResponse.json({ error: 'Lead with this email already exists' }, { status: 400 });
     }
-
     // Set the country for the new lead based on admin's country
-    const leadCountry = countryFilter || session.user.country;
-    
+    const leadCountry = countryFilter || user.country;
     const newLead = await prisma.lead.create({
       data: {
         name,
@@ -115,7 +113,6 @@ export async function POST(request: NextRequest) {
         createdBy: { select: { id: true, name: true, email: true } },
       },
     });
-
     return NextResponse.json(newLead, { status: 201 });
   } catch (error) {
     console.error('Error creating lead:', error);

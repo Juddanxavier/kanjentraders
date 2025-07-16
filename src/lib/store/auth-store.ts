@@ -1,107 +1,172 @@
 /** @format */
-
 import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+import { devtools, persist } from 'zustand/middleware';
 import { authClient } from '@/lib/auth/auth-client';
+import type { AuthUser, UserRole } from '@/lib/auth/permissions';
 import type { Session } from 'better-auth/types';
-import type { AuthUser } from '@/lib/auth/permissions';
-import { isAdmin as checkIsAdmin, isSuperAdmin as checkIsSuperAdmin } from '@/lib/auth/permissions';
 
 interface AuthState {
   // State
-  session: Session | null;
   user: AuthUser | null;
-  isLoading: boolean;
+  session: Session | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
   
   // Actions
+  setUser: (user: AuthUser | null) => void;
   setSession: (session: Session | null) => void;
-  checkSession: () => Promise<void>;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
   signOut: () => Promise<void>;
-  clearSession: () => void;
+  checkSession: () => Promise<void>;
   
-  // Computed
+  // Computed values
   isAdmin: () => boolean;
   isSuperAdmin: () => boolean;
-  hasRole: (role: AuthUser['role']) => boolean;
+  hasRole: (role: 'user' | 'admin' | 'super_admin') => boolean;
   canAccessCountry: (country: string) => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
   devtools(
-    (set, get) => ({
-      // Initial state
-      session: null,
-      user: null,
-      isLoading: true,
-      isAuthenticated: false,
+    persist(
+      (set, get) => ({
+        // Initial state
+        user: null,
+        session: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: null,
 
-      // Actions
-      setSession: (session) => {
-        set({
-          session,
-          user: session?.user as AuthUser || null,
-          isAuthenticated: !!session,
-          isLoading: false,
-        });
-      },
-
-      checkSession: async () => {
-        set({ isLoading: true });
-        try {
-          const { data } = await authClient.getSession();
-          get().setSession(data);
-        } catch (error) {
-          console.error('Session check failed:', error);
-          get().clearSession();
-        }
-      },
-
-      signOut: async () => {
-        try {
-          await authClient.signOut();
-          get().clearSession();
-        } catch (error) {
-          console.error('Sign out failed:', error);
-          // Clear session anyway to ensure user is logged out locally
-          get().clearSession();
-        }
-      },
-
-      clearSession: () => {
-        set({
-          session: null,
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-        });
-      },
-
-      // Computed
-      isAdmin: () => {
-        const user = get().user;
-        return checkIsAdmin(user);
-      },
-
-      isSuperAdmin: () => {
-        const user = get().user;
-        return checkIsSuperAdmin(user);
-      },
-      
-      hasRole: (role) => {
-        const user = get().user;
-        return user?.role === role;
-      },
-      
-      canAccessCountry: (country) => {
-        const user = get().user;
-        if (!user) return false;
-        // Super admin can access all countries
-        if (user.role === 'super_admin') return true;
-        // Others can only access their own country
-        return user.country === country;
-      },
-    }),
+        // Actions
+        setUser: (user) => set({ 
+          user, 
+          isAuthenticated: !!user && !user.banned 
+        }),
+        
+  setSession: (session) => {
+    const user = session?.user ? {
+      ...session.user,
+      role: (session.user.role as UserRole) || 'user',
+      country: session.user.country || 'India',
+      banned: session.user.banned || false,
+      banReason: session.user.banReason || null,
+      banExpires: session.user.banExpires || null,
+      phoneNumber: session.user.phoneNumber || null,
+      phoneNumberVerified: session.user.phoneNumberVerified || false,
+    } as AuthUser : null;
+    set({ 
+      session,
+      user,
+      isAuthenticated: !!user && !user.banned,
+      isLoading: false,
+      error: null
+    });
+  },
+        
+        setLoading: (loading) => set({ isLoading: loading }),
+        setError: (error) => set({ error }),
+        
+        signOut: async () => {
+          try {
+            set({ isLoading: true, error: null });
+            await authClient.signOut();
+            set({ 
+              user: null, 
+              session: null, 
+              isAuthenticated: false,
+              isLoading: false,
+              error: null
+            });
+          } catch (error) {
+            console.error('Sign out error:', error);
+            set({ 
+              error: 'Failed to sign out',
+              isLoading: false
+            });
+            throw error;
+          }
+        },
+        
+        checkSession: async () => {
+          try {
+            set({ isLoading: true, error: null });
+            const session = await authClient.getSession();
+            const user = session?.user ? {
+              ...session.user,
+              role: (session.user.role as UserRole) || 'user',
+              country: session.user.country || 'India',
+              banned: session.user.banned || false,
+              banReason: session.user.banReason || null,
+              banExpires: session.user.banExpires || null,
+              phoneNumber: session.user.phoneNumber || null,
+              phoneNumberVerified: session.user.phoneNumberVerified || false,
+            } as AuthUser : null;
+            
+            set({ 
+              session,
+              user,
+              isAuthenticated: !!user && !user.banned,
+              isLoading: false,
+              error: null
+            });
+          } catch (error) {
+            console.error('Session check error:', error);
+            set({ 
+              user: null,
+              session: null,
+              isAuthenticated: false,
+              isLoading: false,
+              error: 'Session check failed'
+            });
+          }
+        },
+        
+        // Computed values
+        isAdmin: () => {
+          const { user } = get();
+          return user?.role === 'admin' || user?.role === 'super_admin';
+        },
+        
+        isSuperAdmin: () => {
+          const { user } = get();
+          return user?.role === 'super_admin';
+        },
+        
+        hasRole: (role: 'user' | 'admin' | 'super_admin') => {
+          const { user } = get();
+          if (!user) return false;
+          
+          // Super admin has all roles
+          if (user.role === 'super_admin') return true;
+          
+          // Admin has admin and user roles
+          if (user.role === 'admin' && (role === 'admin' || role === 'user')) return true;
+          
+          // User only has user role
+          return user.role === role;
+        },
+        
+        canAccessCountry: (country: string) => {
+          const { user } = get();
+          if (!user) return false;
+          
+          // Super admin can access all countries
+          if (user.role === 'super_admin') return true;
+          
+          // Regular users can only access their own country
+          return user.country === country;
+        },
+      }),
+      {
+        name: 'auth-store',
+        partialize: (state) => ({
+          user: state.user,
+          isAuthenticated: state.isAuthenticated,
+        }),
+      }
+    ),
     {
       name: 'AuthStore',
     }

@@ -1,12 +1,9 @@
 /** @format */
-
 'use client';
-
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth/auth-client';
 import type { Session } from 'better-auth/types';
-
 interface UseAuthReturn {
   session: Session | null;
   loading: boolean;
@@ -14,7 +11,6 @@ interface UseAuthReturn {
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
 }
-
 /**
  * Client-side hook for authentication
  * Uses Better-Auth's built-in session management
@@ -24,12 +20,10 @@ export function useAuth(): UseAuthReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const router = useRouter();
-
   // Fetch session on mount
   useEffect(() => {
     fetchSession();
   }, []);
-
   const fetchSession = async () => {
     try {
       setLoading(true);
@@ -43,7 +37,6 @@ export function useAuth(): UseAuthReturn {
       setLoading(false);
     }
   };
-
   const signOut = async () => {
     try {
       await authClient.signOut();
@@ -54,11 +47,9 @@ export function useAuth(): UseAuthReturn {
       throw err;
     }
   };
-
   const refreshSession = async () => {
     await fetchSession();
   };
-
   return {
     session,
     loading,
@@ -67,7 +58,6 @@ export function useAuth(): UseAuthReturn {
     refreshSession,
   };
 }
-
 /**
  * Example usage:
  * 

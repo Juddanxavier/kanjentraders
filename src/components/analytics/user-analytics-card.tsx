@@ -1,7 +1,5 @@
 /** @format */
-
 'use client';
-
 import { useEffect } from 'react';
 import { useAnalyticsStore } from '@/lib/store/analytics-store';
 import { Badge } from '@/components/ui/badge';
@@ -14,18 +12,14 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { IconUsers, IconUserCheck, IconUserPlus, IconTrendingUp } from '@tabler/icons-react';
-
 interface UserAnalyticsCardProps {
   country?: string;
 }
-
 export function UserAnalyticsCard({ country }: UserAnalyticsCardProps) {
   const { userMetrics, fetchAllAnalytics, isLoading } = useAnalyticsStore();
-
   useEffect(() => {
     fetchAllAnalytics(country);
   }, [fetchAllAnalytics, country]);
-
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 gap-4 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
@@ -40,10 +34,8 @@ export function UserAnalyticsCard({ country }: UserAnalyticsCardProps) {
       </div>
     );
   }
-
   const growthRate = userMetrics.newUsers > 0 ? ((userMetrics.newUsers / (userMetrics.totalUsers - userMetrics.newUsers)) * 100) : 0;
   const activityTrend = userMetrics.percentageActive >= 50 ? 'up' : 'down';
-
   return (
     <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
       <Card className="@container/card p-2">
@@ -68,7 +60,6 @@ export function UserAnalyticsCard({ country }: UserAnalyticsCardProps) {
           </div>
         </CardFooter>
       </Card>
-
       <Card className="@container/card">
         <CardHeader>
           <CardDescription>Active Users</CardDescription>
@@ -91,7 +82,6 @@ export function UserAnalyticsCard({ country }: UserAnalyticsCardProps) {
           </div>
         </CardFooter>
       </Card>
-
       <Card className="@container/card">
         <CardHeader>
           <CardDescription>New Users</CardDescription>
@@ -114,7 +104,6 @@ export function UserAnalyticsCard({ country }: UserAnalyticsCardProps) {
           </div>
         </CardFooter>
       </Card>
-
       <Card className="@container/card">
         <CardHeader>
           <CardDescription>Activity Rate</CardDescription>

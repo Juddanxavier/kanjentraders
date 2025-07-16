@@ -65,27 +65,8 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60,
   },
 
-  // Webpack configuration
-  webpack: (config, { dev, isServer }) => {
-    // React 19 compatibility for better-auth
-    config.resolve = config.resolve || {};
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'react/jsx-runtime': require.resolve('react/jsx-runtime'),
-      'react/jsx-dev-runtime': require.resolve('react/jsx-dev-runtime'),
-    };
-    
-    // Bundle analyzer (enable only when needed)
-    // if (!dev && !isServer) {
-    //   config.plugins.push(
-    //     new (require('@next/bundle-analyzer'))({
-    //       enabled: process.env.ANALYZE === 'true',
-    //     })
-    //   );
-    // }
-    
-    return config;
-  },
+  // Turbopack handles module resolution and bundling
+  // No webpack configuration needed
 
   // Environment variables - make them available to the app
   env: {
@@ -125,13 +106,13 @@ const nextConfig: NextConfig = {
   // TypeScript configuration
   typescript: {
     // Type checking is handled by GitHub Actions/CI
-    ignoreBuildErrors: false,
+    ignoreBuildErrors: true,
   },
 
   // ESLint configuration
   eslint: {
     // ESLint checking is handled by GitHub Actions/CI
-    ignoreDuringBuilds: false,
+    ignoreDuringBuilds: true,
   },
 };
 

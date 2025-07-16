@@ -1,13 +1,11 @@
 "use client"
-
 import {
   IconCreditCard,
   IconDotsVertical,
   IconLogout,
-  IconNotification,
   IconUserCircle,
 } from "@tabler/icons-react"
-
+import { Bell } from "lucide-react"
 import {
   Avatar,
   AvatarFallback,
@@ -28,7 +26,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-
 export function NavUser({
   user,
 }: {
@@ -39,7 +36,6 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
-
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -95,7 +91,7 @@ export function NavUser({
                 Billing
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <IconNotification />
+                <Bell className="h-4 w-4" />
                 Notifications
               </DropdownMenuItem>
             </DropdownMenuGroup>

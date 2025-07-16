@@ -1,18 +1,14 @@
 /** @format */
-
 'use client';
-
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { authClient } from '@/lib/auth/auth-client';
-
 interface AuthGuardProps {
   children: React.ReactNode;
   requireAdmin?: boolean;
   fallback?: React.ReactNode;
 }
-
 /**
  * Auth guard component that works with better-auth redirects
  * Uses better-auth's built-in redirect handling
@@ -25,7 +21,6 @@ export function AuthGuard({
   const { getAuthStatus, checkAdmin } = useAuth();
   const router = useRouter();
   const authStatus = getAuthStatus();
-
   useEffect(() => {
     // Use better-auth's built-in redirect handling
     if (authStatus === 'unauthenticated') {
@@ -36,7 +31,6 @@ export function AuthGuard({
       });
     }
   }, [authStatus]);
-
   // Show loading state
   if (authStatus === 'loading') {
     return fallback || (
@@ -45,7 +39,6 @@ export function AuthGuard({
       </div>
     );
   }
-
   // Handle unauthenticated users
   if (authStatus === 'unauthenticated') {
     return fallback || (
@@ -57,7 +50,6 @@ export function AuthGuard({
       </div>
     );
   }
-
   // Handle banned users
   if (authStatus === 'banned') {
     return fallback || (
@@ -69,7 +61,6 @@ export function AuthGuard({
       </div>
     );
   }
-
   // Handle admin requirement
   if (requireAdmin && !checkAdmin()) {
     return fallback || (
@@ -81,10 +72,8 @@ export function AuthGuard({
       </div>
     );
   }
-
   return <>{children}</>;
 }
-
 /**
  * Higher-order component for protecting pages
  */

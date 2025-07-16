@@ -1,7 +1,5 @@
 /** @format */
-
 'use client';
-
 import * as React from 'react';
 import {
   IconCamera,
@@ -15,13 +13,11 @@ import {
   IconHelp,
   IconInnerShadowTop,
   IconListDetails,
-  IconNotification,
   IconReport,
   IconSearch,
   IconSettings,
   IconUsers,
 } from '@tabler/icons-react';
-
 import { NavDocuments } from '@/components/sidebar/nav-documents';
 import { NavMain } from '@/components/sidebar/nav-main';
 import { NavSecondary } from '@/components/sidebar/nav-secondary';
@@ -35,7 +31,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-
 const data = {
   user: {
     name: 'shadcn',
@@ -67,11 +62,6 @@ const data = {
       title: 'Team',
       url: '#',
       icon: IconUsers,
-    },
-    {
-      title: 'Notifications',
-      url: '/notifications',
-      icon: IconNotification,
     },
   ],
   navClouds: [
@@ -157,7 +147,6 @@ const data = {
     },
   ],
 };
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible='offcanvas' {...props}>

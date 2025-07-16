@@ -1,7 +1,5 @@
 /** @format */
-
 'use client';
-
 import React, { useState } from 'react';
 import { useLeadStore } from '@/store/lead-store';
 import { Button } from '@/components/ui/button';
@@ -13,12 +11,10 @@ import { Search, Filter, X, Plus } from 'lucide-react';
 import { LeadStatus } from '@/generated/prisma';
 import { LeadFilters } from '@/types/lead';
 import CreateLeadForm from './create-lead-form';
-
 export default function LeadsFilter() {
   const { filters, setFilters, clearFilters, fetchLeads } = useLeadStore();
   const [localFilters, setLocalFilters] = useState<LeadFilters>(filters);
   const [showCreateModal, setShowCreateModal] = useState(false);
-
   const statusOptions = [
     { value: 'ALL', label: 'All Status' },
     { value: LeadStatus.NEW, label: 'New' },
@@ -26,29 +22,24 @@ export default function LeadsFilter() {
     { value: LeadStatus.SHIPPED, label: 'Shipped' },
     { value: LeadStatus.FAILED, label: 'Failed' },
   ];
-
   const handleFilterChange = (key: keyof LeadFilters, value: any) => {
     setLocalFilters(prev => ({
       ...prev,
       [key]: value
     }));
   };
-
   const applyFilters = () => {
     setFilters(localFilters);
     fetchLeads();
   };
-
   const resetFilters = () => {
     setLocalFilters({});
     clearFilters();
     fetchLeads();
   };
-
   const getActiveFiltersCount = () => {
     return Object.values(localFilters).filter(v => v !== undefined && v !== null && v !== '').length;
   };
-
   return (
     <Card>
       <CardHeader>
@@ -94,7 +85,6 @@ export default function LeadsFilter() {
               </SelectContent>
             </Select>
           </div>
-
           {/* Advanced Filters */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
             <Input
@@ -138,7 +128,6 @@ export default function LeadsFilter() {
               className="h-8 text-sm"
             />
           </div>
-
           {/* Filter Actions */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -161,7 +150,6 @@ export default function LeadsFilter() {
           </div>
         </div>
       </CardContent>
-
       {/* Create Lead Modal */}
       <CreateLeadForm 
         open={showCreateModal} 
