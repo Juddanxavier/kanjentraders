@@ -48,12 +48,9 @@ import {
   Filter,
   ChevronUp,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
   MoreHorizontal
 } from 'lucide-react';
+import { Pagination, usePagination } from '@/components/ui/pagination';
 import { CreateShipmentDialog } from './create-shipment-dialog';
 interface Shipment {
   id: string;
@@ -87,9 +84,6 @@ export function ShipmentManagement() {
   // Sorting states
   const [sortField, setSortField] = useState<SortField>('createdAt');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
-  // Pagination states
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(25);
   // Bulk selection states
   const [selectedShipments, setSelectedShipments] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState(false);
@@ -322,15 +316,24 @@ export function ShipmentManagement() {
     });
     return filtered;
   }, [shipments, searchTerm, statusFilter, carrierFilter, dateRangeFilter, sortField, sortOrder]);
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredAndSortedShipments.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedShipments = filteredAndSortedShipments.slice(startIndex, endIndex);
+  
+  // Pagination hook
+  const pagination = usePagination(
+    filteredAndSortedShipments.length,
+    25, // initial items per page
+    1   // initial page
+  );
+  
+  // Calculate paginated data
+  const paginatedShipments = filteredAndSortedShipments.slice(
+    pagination.startIndex,
+    pagination.endIndex
+  );
+  
   // Reset pagination when filters change
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, statusFilter, carrierFilter, dateRangeFilter]);
+    pagination.setCurrentPage(1);
+  }, [searchTerm, statusFilter, carrierFilter, dateRangeFilter, pagination]);
   const filteredShipments = filteredAndSortedShipments;
   const stats = {
     total: shipments.length,
@@ -643,26 +646,18 @@ export function ShipmentManagement() {
         </Table>
       </div>
       {/* Pagination Controls */}
-      <div className="flex justify-between items-center py-2">
-        <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="icon" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
-            <ChevronsLeft className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span>Page {currentPage}</span>
-          <Button variant="ghost" size="icon" onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>
-            <ChevronsRight className="h-4 w-4" />
-          </Button>
-        </div>
-        <div>
-          Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, shipments.length)} of {shipments.length} shipments
-        </div>
-      </div>
+      <Pagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalItems={filteredAndSortedShipments.length}
+        itemsPerPage={pagination.itemsPerPage}
+        onPageChange={pagination.handlePageChange}
+        onItemsPerPageChange={pagination.handleItemsPerPageChange}
+        showRowsPerPage={true}
+        showFirstLast={true}
+        maxPageButtons={5}
+        pageSizeOptions={[10, 25, 50, 100]}
+      />
       {/* Create Shipment Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent className="max-w-2xl">

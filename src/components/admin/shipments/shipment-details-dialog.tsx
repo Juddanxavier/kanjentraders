@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { toast } from 'sonner';
 import { 
   Package, 
   User, 
@@ -70,7 +71,8 @@ interface ShipmentDetailsDialogProps {
 }
 export function ShipmentDetailsDialog({ shipment, onClose }: ShipmentDetailsDialogProps) {
   const [refreshing, setRefreshing] = useState(false);
-  const { toast } = use// Parse tracking events from JSON string
+  
+  // Parse tracking events from JSON string
   const trackingEvents = useMemo(() => {
     if (!shipment.trackingEvents) return [];
     try {
@@ -89,19 +91,29 @@ export function ShipmentDetailsDialog({ shipment, onClose }: ShipmentDetailsDial
         method: 'POST',
       });
       if (response.ok) {
+        toast.success('Tracking information refreshed successfully');
         // Refresh the page or update the shipment data
         window.location.reload();
       } else {
         throw new Error('Failed to refresh tracking');
       }
     } catch (error) {
-      } finally {
+      console.error('Error refreshing tracking:', error);
+      toast.error('Failed to refresh tracking information');
+    } finally {
       setRefreshing(false);
     }
   };
+  
   const copyTrackingNumber = () => {
     navigator.clipboard.writeText(shipment.trackingNumber);
-    };
+    toast.success('Tracking number copied to clipboard');
+  };
+  
+  const copyWhiteLabelTrackingId = () => {
+    navigator.clipboard.writeText(shipment.whiteLabelTrackingId);
+    toast.success('White label tracking ID copied to clipboard');
+  };
   const getStatusIcon = (status: string) => {
     const normalizedStatus = status.toLowerCase();
     // More specific icon mapping based on common tracking statuses
@@ -200,9 +212,7 @@ export function ShipmentDetailsDialog({ shipment, onClose }: ShipmentDetailsDial
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => {
-                        navigator.clipboard.writeText(shipment.whiteLabelTrackingId);
-                        }}
+                      onClick={copyWhiteLabelTrackingId}
                       className="h-6 w-6 p-0"
                     >
                       <Copy className="h-3 w-3" />
