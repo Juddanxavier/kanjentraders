@@ -1,10 +1,8 @@
 /** @format */
-import { auth } from '@/lib/auth/auth';
-import { headers } from 'next/headers';
+import { getSession } from '@/lib/auth/auth-server';
+
 export default async function Page() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
   if (!session) {
     return <p>Not authenticated</p>;
   }

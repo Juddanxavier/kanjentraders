@@ -1,126 +1,134 @@
 /** @format */
-import type { Session } from 'better-auth/types';
+
+/**
+ * NEXTAUTH.JS PERMISSIONS SYSTEM
+ * 
+ * This file defines the role-based access control system for NextAuth.js.
+ * It provides utility functions for checking user permissions and roles.
+ */
+
+// User roles
 export type UserRole = 'user' | 'admin' | 'super_admin';
 
+// User type for auth operations
 export interface AuthUser {
   id: string;
-  name: string | null;
   email: string;
-  emailVerified: boolean;
-  image: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  name?: string | null;
   role: UserRole;
-  country: string;
-  banned: boolean | null;
-  banReason: string | null;
-  banExpires: Date | null;
-  phoneNumber: string | null;
-  phoneNumberVerified: boolean;
+  country?: string | null;
+  banned?: boolean;
+  image?: string | null;
+  createdAt?: Date | string;
 }
+
 /**
- * Check if user has a specific role
+ * Check if a user can manage other users
  */
-export function hasRole(user: AuthUser | null, role: UserRole): boolean {
-  if (!user) return false;
-  return user.role === role;
-}
-/**
- * Check if user is at least an admin (admin or super_admin)
- */
-export function isAdmin(user: AuthUser | null): boolean {
-  if (!user) return false;
+export function canManageUsers(user: AuthUser): boolean {
   return user.role === 'admin' || user.role === 'super_admin';
 }
+
 /**
- * Check if user is a super admin
+ * Check if a user can manage parcels/shipments
  */
-export function isSuperAdmin(user: AuthUser | null): boolean {
-  if (!user) return false;
+export function canManageParcels(user: AuthUser): boolean {
+  return user.role === 'admin' || user.role === 'super_admin';
+}
+
+/**
+ * Check if a user is a super admin
+ */
+export function isSuperAdmin(user: AuthUser): boolean {
   return user.role === 'super_admin';
 }
+
 /**
- * Check if user can access data from a specific country
+ * Check if a user is an admin (including super admin)
  */
-export function canAccessCountry(user: AuthUser | null, country: string): boolean {
-  if (!user) return false;
-  // Super admin can access all countries
-  if (user.role === 'super_admin') return true;
-  // Admin and regular users can only access their own country
+export function isAdmin(user: AuthUser): boolean {
+  return user.role === 'admin' || user.role === 'super_admin';
+}
+
+/**
+ * Get country filter for data queries
+ * Super admins can access all countries, regular admins only their own
+ */
+export function getCountryFilter(user: AuthUser): string | null {
+  if (user.role === 'super_admin') {
+    return null; // No filter - access all countries
+  }
+  
+  if (user.role === 'admin') {
+    return user.country || null;
+  }
+  
+  return user.country || null;
+}
+
+/**
+ * Check if a user can access a specific country's data
+ */
+export function canAccessCountry(user: AuthUser, country: string): boolean {
+  if (user.role === 'super_admin') {
+    return true; // Super admins can access all countries
+  }
+  
   return user.country === country;
 }
+
 /**
- * Get the country filter for database queries
- * Returns null for super_admin (no filter), otherwise returns user's country
+ * Check if a user has a specific role
  */
-export function getCountryFilter(user: AuthUser | null): string | null {
-  if (!user) return null;
-  // Super admin sees all countries
-  if (user.role === 'super_admin') return null;
-  // Everyone else sees only their country
-  return user.country;
-}
-/**
- * Check if user can manage other users
- */
-export function canManageUsers(user: AuthUser | null, targetUserCountry?: string): boolean {
-  if (!user) return false;
-  // Super admin can manage all users
-  if (user.role === 'super_admin') return true;
-  // Admin can manage users in their country only
-  if (user.role === 'admin') {
-    return !targetUserCountry || user.country === targetUserCountry;
+export function hasRole(user: AuthUser, role: UserRole): boolean {
+  if (role === 'super_admin') {
+    return user.role === 'super_admin';
   }
-  // Regular users cannot manage other users
+  
+  if (role === 'admin') {
+    return user.role === 'admin' || user.role === 'super_admin';
+  }
+  
+  return true; // All users have 'user' role
+}
+
+/**
+ * Get user's permission level as a number (higher = more permissions)
+ */
+export function getPermissionLevel(user: AuthUser): number {
+  switch (user.role) {
+    case 'super_admin':
+      return 3;
+    case 'admin':
+      return 2;
+    case 'user':
+    default:
+      return 1;
+  }
+}
+
+/**
+ * Check if user A can manage user B
+ */
+export function canManageUser(userA: AuthUser, userB: AuthUser): boolean {
+  const levelA = getPermissionLevel(userA);
+  const levelB = getPermissionLevel(userB);
+  
+  // Can only manage users with lower or equal permission level
+  // But super admins can manage anyone
+  if (userA.role === 'super_admin') {
+    return true;
+  }
+  
+  // Regular admins can manage users but not other admins
+  if (userA.role === 'admin' && userB.role !== 'admin' && userB.role !== 'super_admin') {
+    return true;
+  }
+  
   return false;
 }
+
 /**
- * Check if user can create/edit parcels
+ * Default permissions for new users
  */
-export function canManageParcels(user: AuthUser | null): boolean {
-  if (!user) return false;
-  // Only admins (including super admin) can manage parcels
-  return isAdmin(user);
-}
-/**
- * Check if user can view a specific parcel
- */
-export function canViewParcel(user: AuthUser | null, parcel: { userId?: string; country: string }): boolean {
-  if (!user) return false;
-  // Super admin can view all parcels
-  if (user.role === 'super_admin') return true;
-  // Admin can view all parcels in their country
-  if (user.role === 'admin' && user.country === parcel.country) return true;
-  // Regular users can only view their own parcels
-  if (user.role === 'user' && parcel.userId === user.id) return true;
-  return false;
-}
-/**
- * Get filter for parcel queries based on user role
- */
-export function getParcelFilter(user: AuthUser | null): { userId?: string; country?: string } | null {
-  if (!user) return null;
-  // Super admin sees all parcels
-  if (user.role === 'super_admin') return {};
-  // Admin sees all parcels in their country
-  if (user.role === 'admin') return { country: user.country };
-  // Regular users see only their own parcels
-  return { userId: user.id };
-}
-/**
- * Example usage in API routes or server components:
- * 
- * const session = await auth.api.getSession({ headers });
- * const user = session?.user as AuthUser;
- * 
- * // Check permissions
- * if (!canManageParcels(user)) {
- *   return new Response('Unauthorized', { status: 401 });
- * }
- * 
- * // Get country filter for queries
- * const countryFilter = getCountryFilter(user);
- * const parcels = await prisma.parcel.findMany({
- *   where: countryFilter ? { country: countryFilter } : undefined
- * });
- */
+export const DEFAULT_USER_ROLE: UserRole = 'user';

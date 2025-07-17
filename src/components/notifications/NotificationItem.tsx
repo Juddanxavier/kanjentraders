@@ -17,7 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useNotificationStore } from '@/lib/store/notification-store';
-import { useSession } from '@/lib/auth/auth-client';
+import { useSession } from 'next-auth/react';
 import { Notification } from '@/types/notification';
 import { cn } from '@/lib/utils';
 

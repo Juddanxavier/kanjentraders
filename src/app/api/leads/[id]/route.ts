@@ -2,7 +2,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth/auth';
+import { getSession } from '@/lib/auth/auth-server';
 import { UpdateLeadData } from '@/types/lead';
 import { getCountryFilter } from '@/lib/auth/permissions';
 import { generateWhiteLabelTrackingId } from '@/lib/utils/tracking-id';
@@ -14,9 +14,7 @@ const isAdmin = (role: string) => ['admin', 'super_admin'].includes(role);
 // PUT /api/leads/[id] - Update a lead
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
+    const session = await getSession();
     
     if (!session?.user || !isAdmin(session.user.role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -59,9 +57,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 // PATCH /api/leads/[id] - Update a lead (specifically for status changes)
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
+    const session = await getSession();
     
     if (!session?.user || !isAdmin(session.user.role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -179,9 +175,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 // DELETE /api/leads/[id] - Delete a lead
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
+    const session = await getSession();
     
     if (!session?.user || !isAdmin(session.user.role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

@@ -1,6 +1,4 @@
 /** @format */
-import { headers } from 'next/headers';
-import { auth } from '@/lib/auth/auth';
 import { redirect } from 'next/navigation';
 import { AdminSiteHeader } from '@/components/admin-site-header';
 import { AppSidebar } from '@/components/app-sidebar';
@@ -9,11 +7,11 @@ import { UsersTable } from '@/components/admin/users-table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { canManageUsers } from '@/lib/auth/permissions';
 import type { AuthUser } from '@/lib/auth/permissions';
+import { getSession } from '@/lib/auth/auth-server';
+
 export default async function UsersPage() {
   // Get session for admin info
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
   const user = session?.user as AuthUser | null;
   // Check if user can manage users
   if (!user || !canManageUsers(user)) {
@@ -30,7 +28,7 @@ export default async function UsersPage() {
     >
       <AppSidebar variant="inset" />
       <SidebarInset>
-        <AdminSiteHeader user={{ name: user.name, email: user.email, image: user.image }} />
+        <AdminSiteHeader user={user} />
         <div className="flex flex-1 flex-col">
           <div className="p-8">
             {/* Header Section */}

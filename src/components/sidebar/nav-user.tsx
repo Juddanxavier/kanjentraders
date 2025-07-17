@@ -24,21 +24,24 @@ import {
 } from '@/components/ui/sidebar';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { useAuth } from '@/hooks/use-auth';
+import { useSession, signOut } from 'next-auth/react';
+
 export function NavUser() {
   const { isMobile } = useSidebar();
   const router = useRouter();
-  const { user, signOut } = useAuth();
+  const { data: session } = useSession();
   const [pending, setPending] = useState(false);
+  
+  const user = session?.user;
+  
   if (pending || !user) {
     return null;
   }
+  
   const handleSignout = async () => {
     try {
       setPending(true);
-      await signOut();
-      // Let better-auth handle the redirect after sign out
-      router.push('/signin');
+      await signOut({ callbackUrl: '/auth/signin' });
     } catch (error) {
       console.error('Error signing out:', error);
     } finally {

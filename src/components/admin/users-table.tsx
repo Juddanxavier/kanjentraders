@@ -14,7 +14,9 @@ import {
   IconUserX,
   IconDeviceMobile,
   IconWorld,
+  IconEye,
 } from "@tabler/icons-react"
+import { useRouter } from "next/navigation"
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -59,6 +61,8 @@ import { format } from "date-fns"
 import type { AuthUser, UserRole } from "@/lib/auth/permissions"
 import { AddUserDialog } from "@/components/admin/add-user-dialog"
 import { EditUserDialog } from "@/components/admin/edit-user-dialog"
+import { useUserStore } from "@/lib/store/user-store"
+import { toast } from "sonner"
 interface User {
   id: string
   email: string
@@ -72,7 +76,7 @@ interface User {
   banned: boolean
   banReason: string | null
   banExpires: string | null
-  avatar: string | null
+  image: string | null
   lastLogin?: string
   activeSessions?: number
 }
@@ -80,84 +84,70 @@ interface UsersTableProps {
   currentUser: AuthUser
 }
 export function UsersTable({ currentUser }: UsersTableProps) {
-  const [users, setUsers] = React.useState<User[]>([])
-  const [loading, setLoading] = React.useState(true)
+  const router = useRouter()
+  
+  // Zustand store with all actions
+  const { 
+    users, 
+    isLoading, 
+    error,
+    filters,
+    updateFilter,
+    getFilteredUsers,
+    fetchUsers,
+    banUser,
+    deleteUser,
+    forceLogout
+  } = useUserStore()
+  
+  // Local table state
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
-  const [globalFilter, setGlobalFilter] = React.useState("")
   const [editingUser, setEditingUser] = React.useState<User | null>(null)
-  // Fetch users
+  
+  // Get filtered users from store - memoize to prevent re-renders
+  const filteredUsers = React.useMemo(() => {
+    const filtered = getFilteredUsers();
+    console.log('🔍 Raw users in store:', users);
+    console.log('🔍 Filtered users:', filtered);
+    console.log('🔍 Current filters:', filters);
+    return filtered;
+  }, [getFilteredUsers, users, filters])
+  
+  // Fetch users only once or when needed
   React.useEffect(() => {
-    fetchUsers()
-  }, [])
-async function fetchUsers() {
-    try {
-      setLoading(true)
-      const response = await fetch('/api/admin/users')
-      if (!response.ok) {
-        throw new Error('Failed to fetch users')
-      }
-      const data = await response.json()
-      setUsers(data)
-    } catch (error) {
-      console.error('Error fetching users:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-  async function handleBanUser(userId: string, ban: boolean) {
-    try {
-      const response = await fetch('/api/admin/users/ban', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId, ban }),
-      })
-      if (!response.ok) {
-        throw new Error('Failed to update user status')
-      }
+    if (users.length === 0) {
       fetchUsers()
-    } catch (error) {
     }
-  }
-  async function handleDeleteUser(userId: string) {
+  }, [users.length, fetchUsers])
+  // Memoize handlers to prevent re-creation - now using Zustand actions
+  const handleBanUser = React.useCallback(async (userId: string, ban: boolean) => {
+    await banUser(userId, ban)
+  }, [banUser])
+  
+  const handleDeleteUser = React.useCallback(async (userId: string) => {
     if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
       return
     }
+    await deleteUser(userId)
+  }, [deleteUser])
+  
+  const handleResetPassword = React.useCallback(async (userId: string) => {
     try {
-      const response = await fetch(`/api/admin/users?id=${userId}`, {
-        method: 'DELETE',
-      })
-      if (!response.ok) {
-        throw new Error('Failed to delete user')
-      }
-      fetchUsers()
+      // TODO: Implement password reset API with NextAuth.js
+      toast.info('Password reset functionality coming soon')
     } catch (error) {
+      toast.error('Failed to reset password')
     }
-  }
-  async function handleResetPassword(userId: string) {
-    try {
-      // TODO: Implement password reset API when better-auth supports it
-    } catch (error) {
-    }
-  }
-  async function handleForceLogout(userId: string) {
-    try {
-      const response = await fetch(`/api/admin/users/sessions?userId=${userId}`, {
-        method: 'DELETE',
-      })
-      if (!response.ok) {
-        throw new Error('Failed to terminate sessions')
-      }
-      const data = await response.json()
-      fetchUsers()
-    } catch (error) {
-    }
-  }
-  const columns: ColumnDef<User>[] = [
+  }, [])
+  
+  const handleForceLogout = React.useCallback(async (userId: string) => {
+    await forceLogout(userId)
+  }, [forceLogout])
+  // Memoize columns to prevent re-creation
+  const columns: ColumnDef<User>[] = React.useMemo(() => [
     {
       id: "select",
       header: ({ table }) => (
@@ -188,7 +178,7 @@ async function fetchUsers() {
         return (
           <div className="flex items-center gap-3">
             <Avatar className="h-8 w-8">
-              <AvatarImage src={user.avatar || undefined} alt={user.name || ""} />
+              <AvatarImage src={user.image || undefined} alt={user.name || ""} />
               <AvatarFallback>
                 {user.name?.split(" ").map(n => n[0]).join("").toUpperCase() || "?"}
               </AvatarFallback>
@@ -313,6 +303,10 @@ async function fetchUsers() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => router.push(`/admin/users/${user.id}`)}>
+                <IconEye className="mr-2 h-4 w-4" />
+                View User
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setEditingUser(user)}>
                 <IconEdit className="mr-2 h-4 w-4" />
                 Edit User
@@ -354,9 +348,9 @@ async function fetchUsers() {
         )
       },
     },
-  ]
+  ], [currentUser, handleBanUser, handleDeleteUser, handleForceLogout, setEditingUser])
   const table = useReactTable({
-    data: users,
+    data: filteredUsers,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -372,7 +366,7 @@ async function fetchUsers() {
       columnFilters,
       columnVisibility,
       rowSelection,
-      globalFilter,
+      globalFilter: filters.search,
     },
   })
   return (
@@ -384,20 +378,14 @@ async function fetchUsers() {
             <IconSearch className='absolute left-2 top-2.5 h-4 w-4 text-muted-foreground' />
             <Input
               placeholder='Search users...'
-              value={globalFilter}
-              onChange={(event) => setGlobalFilter(event.target.value)}
+              value={filters.search}
+              onChange={(event) => updateFilter('search', event.target.value)}
               className='pl-8'
             />
           </div>
           <Select
-            value={
-              (table.getColumn('role')?.getFilterValue() as string) ?? 'all'
-            }
-            onValueChange={(value) =>
-              table
-                .getColumn('role')
-                ?.setFilterValue(value === 'all' ? '' : value)
-            }>
+            value={filters.role}
+            onValueChange={(value) => updateFilter('role', value)}>
             <SelectTrigger className='w-[150px]'>
               <SelectValue placeholder='All roles' />
             </SelectTrigger>
@@ -409,14 +397,8 @@ async function fetchUsers() {
             </SelectContent>
           </Select>
           <Select
-            value={
-              (table.getColumn('status')?.getFilterValue() as string) ?? 'all'
-            }
-            onValueChange={(value) =>
-              table
-                .getColumn('status')
-                ?.setFilterValue(value === 'all' ? '' : value)
-            }>
+            value={filters.status}
+            onValueChange={(value) => updateFilter('status', value as 'all' | 'active' | 'banned')}>
             <SelectTrigger className='w-[150px]'>
               <SelectValue placeholder='All status' />
             </SelectTrigger>
@@ -451,7 +433,7 @@ async function fetchUsers() {
             ))}
           </TableHeader>
           <TableBody>
-            {loading ? (
+            {isLoading ? (
               <TableRow>
                 <TableCell
                   colSpan={columns.length}

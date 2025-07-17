@@ -72,7 +72,7 @@ interface User {
   banned: boolean;
   banReason: string | null;
   banExpires: string | null;
-  avatar: string | null;
+  image: string | null;
   lastLogin?: string;
   activeSessions?: number;
 }
@@ -569,7 +569,7 @@ export function UsersTableImproved({ currentUser }: UsersTableImprovedProps) {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={user.avatar || undefined} alt={user.name || ""} />
+                          <AvatarImage src={user.image || undefined} alt={user.name || ""} />
                           <AvatarFallback>
                             {user.name?.split(" ").map(n => n[0]).join("").toUpperCase() || "?"}
                           </AvatarFallback>

@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import { Pagination, usePagination } from '@/components/ui/pagination';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Table,
@@ -44,6 +45,29 @@ export function UsersTableExample() {
 
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [roleFilter, setRoleFilter] = useState<string>('all');
+
+  // Helper functions for badge colors
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100';
+      case 'user':
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100';
+    }
+  };
+
+  const getStatusBadgeColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100';
+      case 'inactive':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100';
+    }
+  };
 
   // Filter users based on selected filters
   const filteredUsers = users.filter(user => {
@@ -129,18 +153,14 @@ export function UsersTableExample() {
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell className="text-muted-foreground">{user.email}</TableCell>
                   <TableCell>
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      user.role === 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
+                    <Badge className={getRoleBadgeColor(user.role)}>
                       {user.role}
-                    </span>
+                    </Badge>
                   </TableCell>
                   <TableCell>
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
+                    <Badge className={getStatusBadgeColor(user.status)}>
                       {user.status}
-                    </span>
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground">{user.createdAt}</TableCell>
                 </TableRow>

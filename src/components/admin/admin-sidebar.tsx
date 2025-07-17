@@ -1,7 +1,7 @@
 /** @format */
 'use client';
 
-import { User } from 'better-auth/types';
+import { User } from 'next-auth';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';

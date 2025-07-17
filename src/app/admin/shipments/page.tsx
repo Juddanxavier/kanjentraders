@@ -3,16 +3,14 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AdminSiteHeader } from '@/components/admin-site-header';
 import { ShipmentManagement } from '@/components/admin/shipments/shipment-management';
-import { auth } from '@/lib/auth/auth';
-import { headers } from 'next/headers';
+import { getSession } from '@/lib/auth/auth-server';
+
 export const metadata: Metadata = {
   title: 'Shipments - Admin Dashboard',
   description: 'Manage shipments and tracking information',
 };
 export default async function ShipmentsPage() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
   const user = session?.user;
   return (
     <SidebarProvider
@@ -25,7 +23,7 @@ export default async function ShipmentsPage() {
     >
       <AppSidebar variant="inset" />
       <SidebarInset>
-        <AdminSiteHeader user={{ name: user?.name, email: user?.email, image: user?.image }} />
+        <AdminSiteHeader user={user} />
         <div className="flex flex-1 flex-col">
           <div className="p-8">
             <div className="mb-8">

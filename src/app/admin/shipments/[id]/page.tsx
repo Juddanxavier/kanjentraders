@@ -4,7 +4,7 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AdminSiteHeader } from '@/components/admin-site-header';
 import { ShipmentDetailsView } from '@/components/admin/shipments/shipment-details-view';
-import { auth } from '@/lib/auth/auth';
+import { getSession } from '@/lib/auth/auth-server';
 import { headers } from 'next/headers';
 
 export const metadata: Metadata = {
@@ -35,9 +35,7 @@ async function getShipment(id: string, requestHeaders: Headers) {
 export default async function ShipmentDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const requestHeaders = await headers();
-  const session = await auth.api.getSession({
-    headers: requestHeaders,
-  });
+const session = await getSession();
 
   const user = session?.user;
   const shipment = await getShipment(id, requestHeaders);
@@ -57,7 +55,7 @@ export default async function ShipmentDetailsPage({ params }: { params: Promise<
     >
       <AppSidebar variant="inset" />
       <SidebarInset>
-        <AdminSiteHeader user={{ name: user?.name, email: user?.email, image: user?.image }} />
+        <AdminSiteHeader user={user} />
         <div className="flex flex-1 flex-col">
           <div className="p-8">
             <ShipmentDetailsView shipment={shipment} />

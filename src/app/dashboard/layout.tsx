@@ -1,6 +1,5 @@
 /** @format */
-import { headers } from 'next/headers';
-import { auth } from '@/lib/auth/auth';
+import { getSession } from '@/lib/auth/auth-server';
 import { DashboardNav } from '@/components/dashboard-nav';
 /**
  * USER DASHBOARD LAYOUT
@@ -15,9 +14,7 @@ export default async function DashboardLayout({
 }) {
   // Middleware has already validated the session.
   // We can safely get the session here to display user info.
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+const session = await getSession();
   return (
     <div className="dashboard-layout">
       {/* User Navigation */}

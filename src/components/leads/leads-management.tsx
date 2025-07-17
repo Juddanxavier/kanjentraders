@@ -2,7 +2,7 @@
 'use client';
 import React, { useEffect } from 'react';
 import { useLeadStore } from '@/store/lead-store';
-import { useAuthStore } from '@/lib/store/auth-store';
+import { useSession } from 'next-auth/react';
 import LeadsDataTable from './leads-data-table';
 import LeadsStats from './leads-stats';
 import type { AuthUser } from '@/lib/auth/permissions';
@@ -10,8 +10,10 @@ interface LeadsManagementProps {
   user: AuthUser;
 }
 export default function LeadsManagement({ user }: LeadsManagementProps) {
-  const { fetchLeads, fetchStats } = useLeadStore();
-  const { isAuthenticated, isLoading: authLoading } = useAuthStore();
+const { fetchLeads, fetchStats } = useLeadStore();
+  const { data: session, status } = useSession();
+  const isAuthenticated = !!session;
+  const authLoading = status === 'loading';
   
   useEffect(() => {
     // Only fetch if authenticated and not loading

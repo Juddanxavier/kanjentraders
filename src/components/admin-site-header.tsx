@@ -18,13 +18,13 @@ import { User, LogOut, Settings } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { AdminBreadcrumb } from "@/components/admin-breadcrumb"
 import { NotificationBell } from "@/components/notifications/NotificationBell"
+import { CountrySelector } from "@/components/admin/country-selector"
+import type { AuthUser } from "@/lib/auth/permissions"
+
 interface AdminSiteHeaderProps {
-  user: {
-    name?: string | null;
-    email: string;
-    image?: string | null;
-  }
+  user: AuthUser;
 }
+
 export function AdminSiteHeader({ user }: AdminSiteHeaderProps) {
   const router = useRouter();
   const handleSignOut = async () => {
@@ -56,6 +56,7 @@ export function AdminSiteHeader({ user }: AdminSiteHeaderProps) {
         />
         <AdminBreadcrumb />
         <div className="ml-auto flex items-center gap-2">
+          <CountrySelector user={user} />
           <ThemeToggle />
           <NotificationBell />
           <DropdownMenu>

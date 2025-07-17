@@ -1,32 +1,45 @@
 /** @format */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from './src/lib/auth/auth';
-import {
-  isPublicRoute,
-  isAdminRoute,
-  isUserProtectedRoute,
-  isProtectedRoute,
-  shouldSkipMiddleware,
-  getSigninRedirectUrl,
-  isAdmin,
-  isBannedUser,
-  logSecurityEvent,
-  logAuthEvent,
-  SECURITY_HEADERS,
-} from './src/lib/auth/route-utils';
+import { withAuth } from 'next-auth/middleware';
 
 /**
- * Enhanced Better-Auth Middleware
+ * NextAuth.js Enhanced Middleware
  * 
  * Features:
- * - Full session validation via better-auth
+ * - Full session validation via NextAuth.js
  * - Role-based access control
  * - Security headers
- * - Audit logging
- * - Banned user protection
  * - Comprehensive error handling
  */
+
+const SECURITY_HEADERS = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'X-XSS-Protection': '1; mode=block',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
+};
+
+const publicRoutes = ['/auth/signin', '/auth/signup', '/auth/error', '/login', '/'];
+const adminRoutes = ['/admin'];
+
+function isPublicRoute(pathname: string): boolean {
+  return publicRoutes.some(route => pathname.startsWith(route));
+}
+
+function isAdminRoute(pathname: string): boolean {
+  return adminRoutes.some(route => pathname.startsWith(route));
+}
+
+function shouldSkipMiddleware(pathname: string): boolean {
+  return (
+    pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/favicon.ico') ||
+    pathname.startsWith('/public')
+  );
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -54,84 +67,11 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // For all protected routes, we need a session.
-  if (isProtectedRoute(pathname)) {
-    try {
-      console.log('🔐 Checking session...');
-      const session = await auth.api.getSession({ headers: request.headers });
-
-      // If no valid session, redirect to signin
-      if (!session?.user) {
-        console.log('❌ No valid session found');
-        const redirectUrl = getSigninRedirectUrl(pathname);
-        console.log('↪️  Redirecting to:', redirectUrl);
-        console.log('=== MIDDLEWARE END ===\n');
-        return NextResponse.redirect(new URL(redirectUrl, request.url));
-      }
-      
-      // --- Authorization Checks ---
-      const isBanned = session.user.banned;
-      const isAdmin = session.user.role === 'admin' || session.user.role === 'super_admin';
-      const userRole = session.user.role || 'user';
-
-      console.log('👤 User Info:', {
-        userId: session.user.id,
-        email: session.user.email,
-        role: userRole,
-        isAdmin: isAdmin,
-        isBanned: isBanned
-      });
-
-      // Block banned users
-      if (isBanned) {
-        console.log('🚫 User is banned');
-        console.log('=== MIDDLEWARE END ===\n');
-        return NextResponse.redirect(new URL('/signin?error=account_banned', request.url));
-      }
-
-      // Redirect /admin to /admin/dashboard for consistency
-      if (pathname === '/admin') {
-        console.log('↪️  Redirecting /admin to /admin/dashboard');
-        console.log('=== MIDDLEWARE END ===\n');
-        return NextResponse.redirect(new URL('/admin/dashboard', request.url));
-      }
-
-      // ADMIN ROUTE: Requires admin role
-      if (isAdminRoute(pathname)) {
-        console.log('🔒 Admin route detected');
-        if (!isAdmin) {
-          console.log('❌ User is not admin, redirecting to unauthorized');
-          console.log('=== MIDDLEWARE END ===\n');
-          return NextResponse.redirect(new URL('/unauthorized', request.url));
-        }
-        console.log('✅ Admin access granted');
-      }
-
-      // USER ROUTE: Any valid user (including admins) can access.
-      if (isUserProtectedRoute(pathname)) {
-        console.log('👥 User route detected, access granted');
-      }
-
-      // All checks passed, allow access
-      console.log('✅ All checks passed, allowing access');
-      console.log('=== MIDDLEWARE END ===\n');
-      return response;
-
-    } catch (error: any) {
-      console.error('❌ Middleware session error:', error);
-      console.error('Error details:', {
-        message: error?.message,
-        name: error?.name
-      });
-      console.log('=== MIDDLEWARE END (ERROR) ===\n');
-      
-      // If it's a signin or signup page, allow access even with error
-      if (pathname === '/signin' || pathname === '/signup') {
-        return response;
-      }
-      
-      return NextResponse.redirect(new URL('/signin?error=session_error', request.url));
-    }
+  // For protected routes, redirect to signin if not authenticated
+  if (!isPublicRoute(pathname)) {
+    console.log('🔒 Protected route detected, redirecting to signin');
+    console.log('=== MIDDLEWARE END ===\n');
+    return NextResponse.redirect(new URL('/auth/signin', request.url));
   }
 
   // Default: allow access

@@ -2,8 +2,8 @@ import { z } from 'zod';
 const envSchema = z.object({
   // Node environment
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  // Authentication - only required in production
-  BETTER_AUTH_SECRET: z
+  // Authentication - NextAuth.js configuration
+  NEXTAUTH_SECRET: z
     .string()
     .optional()
     .refine((val) => {
@@ -11,8 +11,8 @@ const envSchema = z.object({
         return val && val.length >= 32;
       }
       return true;
-    }, 'BETTER_AUTH_SECRET must be at least 32 characters long in production'),
-  BETTER_AUTH_URL: z
+    }, 'NEXTAUTH_SECRET must be at least 32 characters long in production'),
+  NEXTAUTH_URL: z
     .string()
     .default('http://localhost:3000')
     .refine((val) => {
@@ -22,7 +22,7 @@ const envSchema = z.object({
       } catch {
         return false;
       }
-    }, 'BETTER_AUTH_URL must be a valid URL'),
+    }, 'NEXTAUTH_URL must be a valid URL'),
   // Database - only required in production
   DATABASE_URL: z
     .string()

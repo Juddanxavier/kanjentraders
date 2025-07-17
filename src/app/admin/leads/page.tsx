@@ -5,8 +5,7 @@ import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar"
-import { headers } from 'next/headers';
-import { auth } from '@/lib/auth/auth';
+import { getSession } from '@/lib/auth/auth-server';
 import { redirect } from 'next/navigation';
 import { canManageUsers } from '@/lib/auth/permissions';
 import type { AuthUser } from '@/lib/auth/permissions';
@@ -23,9 +22,7 @@ import LeadsManagement from '@/components/leads/leads-management';
  */
 export default async function AdminLeadsPage() {
   // Get session for admin info (already validated in layout)
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+const session = await getSession();
   // This should never happen due to middleware validation, but safety check
   if (!session?.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) {
     return <div>Access denied</div>;
@@ -41,7 +38,7 @@ export default async function AdminLeadsPage() {
     >
       <AppSidebar variant="inset" />
       <SidebarInset>
-        <AdminSiteHeader user={{ name: session.user.name, email: session.user.email, image: session.user.image }} />
+        <AdminSiteHeader user={session.user as AuthUser} />
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2">
             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">

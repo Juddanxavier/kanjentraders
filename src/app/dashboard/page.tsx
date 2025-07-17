@@ -1,16 +1,16 @@
 /** @format */
 'use client'
 
-import { LogoutButton } from '@/components/auth/logout-button';
-import { AuthLayout } from '@/components/auth/auth-layout';
-import { useSession } from '@/lib/auth/auth-client';
+import { AuthGuard } from '@/components/auth/auth-guard';
+import { useSession, signOut } from 'next-auth/react';
 import { UserAnalyticsCard } from '@/components/analytics/user-analytics-card';
+import { Button } from '@/components/ui/button';
 
 /**
  * USER DASHBOARD PAGE
  * 
  * This page shows user-specific information and actions
- * Security is handled by the AuthLayout component
+ * Security is handled by the AuthGuard component
  */
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -20,8 +20,13 @@ export default function DashboardPage() {
   }
   
   const { user } = session;
+  
+  const handleLogout = () => {
+    signOut({ callbackUrl: '/auth/signin' });
+  };
+  
   return (
-    <AuthLayout>
+    <AuthGuard>
       <div className="dashboard-page">
       <div className="dashboard-header">
         <div className="dashboard-header-content">
@@ -30,7 +35,9 @@ export default function DashboardPage() {
             <p>Manage your account and track your packages</p>
           </div>
           <div className="dashboard-header-actions">
-            <LogoutButton />
+            <Button onClick={handleLogout} variant="outline">
+              Logout
+            </Button>
           </div>
         </div>
       </div>
@@ -80,7 +87,7 @@ export default function DashboardPage() {
         )}
       </div>
     </div>
-    </AuthLayout>
+    </AuthGuard>
   );
 }
 /**

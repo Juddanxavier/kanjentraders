@@ -2,7 +2,7 @@
 'use client';
 import React, { useState } from 'react';
 import { useLeadStore } from '@/store/lead-store';
-import { useAuthStore } from '@/lib/store/auth-store';
+import { useSession } from 'next-auth/react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -48,8 +48,11 @@ const leadSchema = z.object({
 });
 type LeadData = z.infer<typeof leadSchema>;
 export default function LeadsDataTable() {
-  const { leads, isLoading, error, fetchLeads, updateLead } = useLeadStore();
-  const { isAuthenticated, isLoading: authLoading, user } = useAuthStore();
+const { leads, isLoading, error, fetchLeads, updateLead } = useLeadStore();
+  const { data: session, status } = useSession();
+  const user = session?.user;
+  const isAuthenticated = !!session;
+  const authLoading = status === 'loading';
   const [editingLead, setEditingLead] = useState<LeadWithDetails | null>(null);
   const [deletingLead, setDeletingLead] = useState<LeadWithDetails | null>(
     null

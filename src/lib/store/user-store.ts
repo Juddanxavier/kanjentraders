@@ -2,10 +2,23 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import type { AuthUser } from '@/lib/auth/permissions';
+import { toast } from 'sonner';
+
+// Extended user type for admin operations
+interface ExtendedUser extends AuthUser {
+  phoneNumber?: string | null;
+  phoneNumberVerified?: boolean;
+  banned?: boolean;
+  banReason?: string | null;
+  banExpires?: string | null;
+  image?: string | null;
+  lastLogin?: string;
+  activeSessions?: number;
+}
 interface UserState {
   // State
   currentUser: AuthUser | null;
-  users: AuthUser[];
+  users: ExtendedUser[];
   selectedUserIds: string[];
   isLoading: boolean;
   error: string | null;
@@ -18,7 +31,7 @@ interface UserState {
   };
   // Actions
   setCurrentUser: (user: AuthUser | null) => void;
-  setUsers: (users: AuthUser[]) => void;
+  setUsers: (users: ExtendedUser[]) => void;
   setSelectedUserIds: (ids: string[]) => void;
   toggleUserSelection: (userId: string) => void;
   setLoading: (loading: boolean) => void;
@@ -28,9 +41,15 @@ interface UserState {
     value: UserState['filters'][K]
   ) => void;
   resetFilters: () => void;
+  // API actions
+  fetchUsers: () => Promise<void>;
+  banUser: (userId: string, ban: boolean) => Promise<void>;
+  deleteUser: (userId: string) => Promise<void>;
+  forceLogout: (userId: string) => Promise<void>;
+  updateUser: (userId: string, updates: Partial<ExtendedUser>) => void;
   // Derived getters
-  getFilteredUsers: () => AuthUser[];
-  getSelectedUsers: () => AuthUser[];
+  getFilteredUsers: () => ExtendedUser[];
+  getSelectedUsers: () => ExtendedUser[];
 }
 const initialFilters = {
   search: '',
@@ -64,6 +83,110 @@ export const useUserStore = create<UserState>()(
           filters: { ...state.filters, [key]: value }
         })),
         resetFilters: () => set({ filters: initialFilters }),
+        
+        // API actions with Redis caching
+        fetchUsers: async () => {
+          const state = get();
+          if (state.isLoading) return; // Prevent multiple simultaneous requests
+          
+          try {
+            set({ isLoading: true, error: null });
+            const response = await fetch('/api/admin/users');
+            if (!response.ok) {
+              throw new Error('Failed to fetch users');
+            }
+            const data = await response.json();
+            console.log('📊 Fetched users data:', data);
+            console.log('📊 Users count:', data.length);
+            set({ users: data, selectedUserIds: [] });
+            toast.success(`Users loaded successfully (${data.length} users)`);
+          } catch (error) {
+            console.error('Error fetching users:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Failed to fetch users';
+            set({ error: errorMessage });
+            toast.error('Failed to load users');
+          } finally {
+            set({ isLoading: false });
+          }
+        },
+        
+        banUser: async (userId: string, ban: boolean) => {
+          try {
+            const response = await fetch('/api/admin/users/ban', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId, ban }),
+            });
+            if (!response.ok) {
+              throw new Error('Failed to update user status');
+            }
+            
+            // Optimistically update local state
+            const state = get();
+            const updatedUsers = state.users.map(user => 
+              user.id === userId ? { ...user, banned: ban } : user
+            );
+            set({ users: updatedUsers });
+            
+            toast.success(ban ? 'User banned successfully' : 'User unbanned successfully');
+          } catch (error) {
+            console.error('Error updating user status:', error);
+            toast.error('Failed to update user status');
+          }
+        },
+        
+        deleteUser: async (userId: string) => {
+          try {
+            const response = await fetch(`/api/admin/users?id=${userId}`, {
+              method: 'DELETE',
+            });
+            if (!response.ok) {
+              throw new Error('Failed to delete user');
+            }
+            
+            // Optimistically update local state
+            const state = get();
+            const updatedUsers = state.users.filter(user => user.id !== userId);
+            set({ users: updatedUsers });
+            
+            toast.success('User deleted successfully');
+          } catch (error) {
+            console.error('Error deleting user:', error);
+            toast.error('Failed to delete user');
+          }
+        },
+        
+        forceLogout: async (userId: string) => {
+          try {
+            const response = await fetch(`/api/admin/users/sessions?userId=${userId}`, {
+              method: 'DELETE',
+            });
+            if (!response.ok) {
+              throw new Error('Failed to terminate sessions');
+            }
+            
+            // Optimistically update local state
+            const state = get();
+            const updatedUsers = state.users.map(user => 
+              user.id === userId ? { ...user, activeSessions: 0 } : user
+            );
+            set({ users: updatedUsers });
+            
+            toast.success('User sessions terminated successfully');
+          } catch (error) {
+            console.error('Error terminating sessions:', error);
+            toast.error('Failed to terminate user sessions');
+          }
+        },
+        
+        updateUser: (userId: string, updates: Partial<ExtendedUser>) => {
+          const state = get();
+          const updatedUsers = state.users.map(user => 
+            user.id === userId ? { ...user, ...updates } : user
+          );
+          set({ users: updatedUsers });
+        },
+        
         // Derived getters
         getFilteredUsers: () => {
           const state = get();

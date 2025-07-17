@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useNotificationStore } from '@/lib/store/notification-store';
-import { useSession } from '@/lib/auth/auth-client';
+import { useSession } from 'next-auth/react';
 import { NotificationItem } from './NotificationItem';
 
 interface NotificationCenterProps {

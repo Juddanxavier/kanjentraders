@@ -1,7 +1,6 @@
 /** @format */
-import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { auth } from '@/lib/auth/auth';
+import { getSession } from '@/lib/auth/auth-server';
 
 /**
  * ADMIN LAYOUT - Renders the admin panel with proper session validation
@@ -11,7 +10,7 @@ import { auth } from '@/lib/auth/auth';
  */
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   // Additional server-side security check
-  const session = await auth.api.getSession({ headers: await headers() });
+const session = await getSession();
   
   // Double-check admin access (middleware should have already handled this)
   if (!session?.user) {

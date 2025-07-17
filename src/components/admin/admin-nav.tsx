@@ -1,8 +1,8 @@
 /** @format */
 'use client';
 
-import { User } from 'better-auth/types';
-import { useAuthStore } from '@/lib/store/auth-store';
+import { User } from 'next-auth';
+import { signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { 
   DropdownMenu, 
@@ -18,11 +18,8 @@ interface AdminNavProps {
 }
 
 export function AdminNav({ user }: AdminNavProps) {
-  const { signOut } = useAuthStore();
-  
   const handleSignOut = async () => {
-    await signOut();
-    window.location.href = '/signin';
+    await signOut({ callbackUrl: '/auth/signin' });
   };
 
   return (

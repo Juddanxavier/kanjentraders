@@ -7,7 +7,7 @@ import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useNotificationStore } from '@/lib/store/notification-store';
-import { useSession } from '@/lib/auth/auth-client';
+import { useSession } from 'next-auth/react';
 import { NotificationCenter } from './NotificationCenter';
 
 export function NotificationBell() {

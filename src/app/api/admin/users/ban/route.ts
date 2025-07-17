@@ -1,10 +1,10 @@
 /** @format */
-import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth/auth';
+import { getSession } from '@/lib/auth/auth-server';
 import { prisma } from '@/lib/prisma';
 import { canManageUsers } from '@/lib/auth/permissions';
 import type { AuthUser } from '@/lib/auth/permissions';
+import { ServerRedisService } from '@/lib/services/redis-server';
 // POST /api/admin/users/ban - Ban or unban a user
 export async function POST(request: Request) {
   try {
@@ -14,9 +14,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'User ID required' }, { status: 400 });
     }
     // Get session
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const session = await getSession();
     const currentUser = session?.user as AuthUser | null;
     // Check permissions
     if (!currentUser || !canManageUsers(currentUser)) {
@@ -30,8 +28,9 @@ export async function POST(request: Request) {
     if (!targetUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
-    // Check if current user can manage target user
-    if (!canManageUsers(currentUser, targetUser.country)) {
+// Check if current user can manage target user
+    // Additional check: regular admins can only manage users in their country
+    if (currentUser.role === 'admin' && currentUser.country !== targetUser.country) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     // Update user ban status
@@ -49,6 +48,23 @@ export async function POST(request: Request) {
         where: { userId },
       });
     }
+    
+    // Invalidate cache after user ban/unban
+    try {
+      const cacheKeys = [
+        `users:admin:${targetUser.country}`,
+        `users:super_admin:all`,
+        `users:admin:all`
+      ];
+      
+      for (const key of cacheKeys) {
+        await ServerRedisService.clearCache(key);
+      }
+      console.log('🗑️  Invalidated user cache after ban/unban');
+    } catch (cacheError) {
+      console.warn('⚠️  Cache invalidation failed:', cacheError);
+    }
+    
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error updating user ban status:', error);

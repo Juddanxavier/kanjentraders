@@ -1,7 +1,7 @@
 /** @format */
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth/auth';
+import { getSession } from '@/lib/auth/auth-server';
 import { LeadStatus } from '@/generated/prisma';
 import { getCountryFilter, AuthUser, UserRole } from '@/lib/auth/permissions';
 // Helper to validate if user is an admin
@@ -9,9 +9,7 @@ const isAdmin = (role: string | null | undefined) => role && ['admin', 'super_ad
 // GET /api/leads/stats - Get lead statistics
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
+    const session = await getSession();
     if (!session?.user || !isAdmin(session.user.role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }

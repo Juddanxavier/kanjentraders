@@ -1,22 +1,17 @@
 /** @format */
 
 import { PrismaClient } from '../src/generated/prisma';
-import { hash } from '@node-rs/argon2';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 // Helper function to hash passwords
 async function hashPassword(password: string) {
-  return await hash(password, {
-    memoryCost: 19456,
-    timeCost: 2,
-    outputLen: 32,
-    parallelism: 1,
-  });
+  return await bcrypt.hash(password, 10);
 }
 
 // Sample data
-const countries = ['SG', 'MY', 'TH', 'PH', 'ID', 'VN'];
+const countries = ['India', 'Singapore', 'Malaysia', 'Thailand', 'Philippines', 'Indonesia', 'Vietnam'];
 
 const firstNames = [
   'John', 'Jane', 'Michael', 'Sarah', 'David', 'Emma', 'James', 'Olivia',

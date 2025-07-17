@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { useNotificationStore } from '@/lib/store/notification-store';
-import { useSession } from '@/lib/auth/auth-client';
+import { useSession } from 'next-auth/react';
 
 export function useNotifications() {
   const { addNotification } = useNotificationStore();

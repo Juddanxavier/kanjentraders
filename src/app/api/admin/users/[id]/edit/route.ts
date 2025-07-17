@@ -1,8 +1,7 @@
 /** @format */
 
-import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth/auth';
+import { getSession } from '@/lib/auth/auth-server';
 import { prisma } from '@/lib/prisma';
 import { canManageUsers } from '@/lib/auth/permissions';
 import type { AuthUser } from '@/lib/auth/permissions';
@@ -19,9 +18,7 @@ export async function PATCH(
     const userId = id;
 
     // Get session
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const session = await getSession();
 
     const currentUser = session?.user as AuthUser | null;
 
@@ -45,7 +42,7 @@ export async function PATCH(
     }
 
     // Check if current user can manage target user
-    if (!canManageUsers(currentUser, targetUser.country)) {
+    if (currentUser.role === 'admin' && currentUser.country !== targetUser.country) {
       return NextResponse.json(
         { error: 'You can only manage users in your country' },
         { status: 403 }

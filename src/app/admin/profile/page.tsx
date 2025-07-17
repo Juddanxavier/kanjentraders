@@ -1,6 +1,5 @@
 /** @format */
-import { headers } from 'next/headers';
-import { auth } from '@/lib/auth/auth';
+import { getSession } from '@/lib/auth/auth-server';
 import { redirect } from 'next/navigation';
 import { ProfileForm } from '@/components/admin/profile-form';
 import { PasswordChangeForm } from '@/components/admin/password-change-form';
@@ -13,9 +12,7 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
 export default async function AdminProfilePage() {
   // Get session for admin info
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+const session = await getSession();
   // This should never happen due to middleware validation
   if (!session?.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) {
     redirect('/dashboard');
@@ -31,7 +28,7 @@ export default async function AdminProfilePage() {
     >
       <AppSidebar variant="inset" />
       <SidebarInset>
-        <AdminSiteHeader user={{ name: session.user.name, email: session.user.email, image: session.user.image }} />
+        <AdminSiteHeader user={session.user} />
         <div className="flex flex-1 flex-col">
           <div className="p-8">
             {/* Header Section */}

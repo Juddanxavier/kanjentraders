@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { canManageParcels } from '@/lib/auth/permissions';
+import { canManageParcels, getCountryFilter } from '@/lib/auth/permissions';
 import { getServerSession } from '@/lib/services/sessionService';
 import { prisma } from '@/lib/prisma';
 import { validateTrackingNumber } from '@/lib/services/shippoService';
@@ -190,8 +190,15 @@ export async function GET(request: NextRequest) {
     if (!canManageParcels(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-    // Get shipments with lead and user info
+    
+    // Get country filter based on user role
+    const countryFilter = getCountryFilter(user);
+    
+    // Get shipments with lead and user info (filtered by country)
     const shipments = await prisma.shipment.findMany({
+      where: {
+        lead: countryFilter ? { country: countryFilter } : undefined
+      },
       include: {
         lead: {
           include: {

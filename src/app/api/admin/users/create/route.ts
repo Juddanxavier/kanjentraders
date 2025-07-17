@@ -1,7 +1,6 @@
 /** @format */
-import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth/auth';
+import { getSession } from '@/lib/auth/auth-server';
 import { prisma } from '@/lib/prisma';
 import { canManageUsers } from '@/lib/auth/permissions';
 import type { AuthUser } from '@/lib/auth/permissions';
@@ -19,9 +18,7 @@ export async function POST(request: Request) {
       );
     }
     // Get session
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const session = await getSession();
     const currentUser = session?.user as AuthUser | null;
     // Check permissions
     if (!currentUser || !canManageUsers(currentUser)) {
@@ -65,7 +62,7 @@ export async function POST(request: Request) {
         phoneNumberVerified: false,
       },
     });
-    // Create an account record for the user (required by better-auth)
+// Create an account record for the user (required by NextAuth.js with credentials provider)
     await prisma.account.create({
       data: {
         id: `${newUser.id}-email`,

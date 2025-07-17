@@ -1,7 +1,6 @@
 /** @format */
-import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth/auth';
+import { getSession } from '@/lib/auth/auth-server';
 import { prisma } from '@/lib/prisma';
 import { canManageUsers } from '@/lib/auth/permissions';
 import type { AuthUser } from '@/lib/auth/permissions';
@@ -14,9 +13,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'User ID required' }, { status: 400 });
     }
     // Get session
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const session = await getSession();
     const currentUser = session?.user as AuthUser | null;
     // Check permissions
     if (!currentUser || !canManageUsers(currentUser)) {
@@ -31,7 +28,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
     // Check if current user can manage target user
-    if (!canManageUsers(currentUser, targetUser.country)) {
+    if (currentUser.role === 'admin' && currentUser.country !== targetUser.country) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     // Delete all sessions for the user

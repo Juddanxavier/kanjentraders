@@ -14,94 +14,93 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// NextAuth.js Models
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  emailVerified Boolean
-  image         String?
-  role          String    @default("user") // user | admin | super_admin
-  banned        Boolean?  @default(false)
-  banReason     String?
-  banExpires    DateTime?
-  avatar        String?
-  country       String    @default("India")
-  phoneNumber         String?   @unique
-  phoneNumberVerified Boolean   @default(false)
-  sessions      Session[]
-  accounts      Account[]
-  assignedLeads Lead[]    @relation("AssignedLeads")
-  createdLeads  Lead[]    @relation("CreatedLeads")
-  notifications Notification[]
+  id                  String         @id @default(cuid())
+  email               String         @unique
+  name                String?
+  emailVerified       DateTime?
+  image               String?
+  password            String
+  role                String         @default("user") // user | admin | super_admin
+  status              String         @default("active") // active | inactive | banned
+  banned              Boolean?       @default(false)
+  banReason           String?
+  banExpires          DateTime?
+  country             String         @default("India")
+  whiteLabel          String         @default("default")
+  phoneNumber         String?        @unique
+  phoneNumberVerified Boolean        @default(false)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  
+  // NextAuth.js relations
+  sessions            Session[]
+  accounts            Account[]
+  
+  // Business logic relations
+  assignedLeads       Lead[]         @relation("AssignedLeads")
+  createdLeads        Lead[]         @relation("CreatedLeads")
+  notifications       Notification[]
 
-  @@map("user")
+  @@map("users")
 }
 
 model Session {
-  id             String   @id
-  expiresAt      DateTime
-  token          String
-  createdAt      DateTime
-  updatedAt      DateTime
-  ipAddress      String?
-  userAgent      String?
-  userId         String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  impersonatedBy String?
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([token])
-  @@map("session")
+  @@map("sessions")
 }
 
 model Account {
-  id                    String    @id
-  accountId             String
-  providerId            String
-  userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accessToken           String?
-  refreshToken          String?
-  idToken               String?
-  accessTokenExpiresAt  DateTime?
-  refreshTokenExpiresAt DateTime?
-  scope                 String?
-  password              String?
-  createdAt             DateTime
-  updatedAt             DateTime
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("account")
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
 }
 
-model Verification {
-  id         String    @id
+model VerificationToken {
   identifier String
-  value      String
-  expiresAt  DateTime
-  createdAt  DateTime?
-  updatedAt  DateTime?
+  token      String
+  expires    DateTime
 
-  @@map("verification")
+  @@unique([identifier, token])
+  @@map("verificationtokens")
 }
 
 model Lead {
-  id               String   @id @default(cuid())
-  name             String
-  email            String   @unique
-  phoneNumber      String?
-  destination      String
-  origin           String
-  weight           Float
-  status           LeadStatus @default(NEW)
-  country          String   @default("India")
-  assignedTo       User?     @relation("AssignedLeads", fields: [assignedToId], references: [id])
-  assignedToId     String?
-  createdBy        User      @relation("CreatedLeads", fields: [createdById], references: [id])
-  createdById      String
-  shipment         Shipment?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique
+  phoneNumber  String?
+  destination  String
+  origin       String
+  weight       Float
+  status       LeadStatus @default(NEW)
+  country      String     @default("India")
+  assignedTo   User?      @relation("AssignedLeads", fields: [assignedToId], references: [id])
+  assignedToId String?
+  createdBy    User       @relation("CreatedLeads", fields: [createdById], references: [id])
+  createdById  String
+  shipment     Shipment?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
   @@index([email])
   @@index([status])
@@ -110,47 +109,37 @@ model Lead {
 }
 
 model Shipment {
-  id                    String          @id @default(cuid())
-  leadId                String          @unique
-  lead                  Lead            @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  
+  id                   String         @id @default(cuid())
+  leadId               String         @unique
+  lead                 Lead           @relation(fields: [leadId], references: [id], onDelete: Cascade)
   // White Label Tracking ID
-  whiteLabelTrackingId  String          @unique // GT + 8 alphanumeric characters
-  
+  whiteLabelTrackingId String         @unique // GT + 8 alphanumeric characters
   // Shippo Integration Fields
-  shippoTrackingId      String?         // Shippo's internal tracking ID
-  trackingNumber        String          // Carrier's tracking number (entered by admin)
-  carrier               String          // Carrier name (FedEx, UPS, DHL, etc.)
-  serviceType           String?         // Express, Ground, etc.
-  
+  shippoTrackingId     String? // Shippo's internal tracking ID
+  trackingNumber       String         @unique // Carrier's tracking number (entered by admin)
+  carrier              String // Carrier name (FedEx, UPS, DHL, etc.)
+  serviceType          String? // Express, Ground, etc.
   // Shipment Details
-  status                ShipmentStatus  @default(PENDING)
-  trackingStatus        String?         // Raw status from Shippo/carrier
-  estimatedDelivery     DateTime?
-  actualDelivery        DateTime?
-  
+  status               ShipmentStatus @default(PENDING)
+  trackingStatus       String? // Raw status from Shippo/carrier
+  estimatedDelivery    DateTime?
+  actualDelivery       DateTime?
   // Address Information (from lead or manual entry)
-  fromAddress           Json?           // Origin address
-  toAddress             Json?           // Destination address
-  
+  fromAddress          Json? // Origin address
+  toAddress            Json? // Destination address
   // Package Details
-  weight                Float?
-  dimensions            Json?           // {length, width, height, unit}
-  packageType           String?         // box, envelope, etc.
-  
+  weight               Float?
+  dimensions           Json? // {length, width, height, unit}
+  packageType          String? // box, envelope, etc.
   // Tracking Events (from Shippo webhooks)
-  trackingEvents        Json?           // Array of tracking events
-  lastTrackedAt         DateTime?
-  
+  trackingEvents       Json? // Array of tracking events
+  lastTrackedAt        DateTime?
   // Metadata
-  shippoData            Json?           // Full Shippo response for debugging
-  notes                 String?         // Admin notes
-  
-  createdAt             DateTime        @default(now())
-  updatedAt             DateTime        @updatedAt
+  shippoData           Json? // Full Shippo response for debugging
+  notes                String? // Admin notes
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
 
-  @@index([trackingNumber])
-  @@index([whiteLabelTrackingId])
   @@index([status])
   @@index([carrier])
   @@index([estimatedDelivery])
@@ -171,7 +160,7 @@ model Notification {
   type      NotificationType
   title     String
   message   String
-  data      Json?            // Additional payload data
+  data      Json? // Additional payload data
   readAt    DateTime?
   actionUrl String?
   priority  Int              @default(0) // 0=low, 1=medium, 2=high, 3=urgent
@@ -201,13 +190,14 @@ enum NotificationType {
 }
 
 enum ShipmentStatus {
-  PENDING       // Shipment created but not yet picked up
-  IN_TRANSIT    // Package is on the way
+  PENDING // Shipment created but not yet picked up
+  IN_TRANSIT // Package is on the way
   OUT_FOR_DELIVERY // Package is out for delivery
-  DELIVERED     // Package delivered
-  EXCEPTION     // Issue with delivery (delay, damage, etc.)
-  RETURNED      // Package returned to sender
-  CANCELLED     // Shipment cancelled
-  UNKNOWN       // Status unknown or not updated
+  DELIVERED // Package delivered
+  EXCEPTION // Issue with delivery (delay, damage, etc.)
+  RETURNED // Package returned to sender
+  CANCELLED // Shipment cancelled
+  UNKNOWN // Status unknown or not updated
 }
+
 

@@ -10,7 +10,7 @@ import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar"
-import { useSession } from "@/lib/auth/auth-client"
+import { useSession } from "next-auth/react"
 import data from "./data.json"
 
 /**
@@ -46,7 +46,7 @@ export default function AdminPage() {
     >
       <AppSidebar variant="inset" />
       <SidebarInset>
-        <AdminSiteHeader user={{ name: session.user.name, email: session.user.email, image: session.user.image }} />
+        <AdminSiteHeader user={session.user} />
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2">
             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">

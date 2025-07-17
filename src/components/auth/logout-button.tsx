@@ -1,56 +1,54 @@
 /** @format */
 'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { authClient } from '@/lib/auth/auth-client';
+
+import { signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
-/**
- * LOGOUT BUTTON COMPONENT
- * 
- * Provides secure logout functionality with:
- * - Better Auth integration
- * - Loading states
- * - Error handling
- * - Redirect to signin
- */
-export function LogoutButton() {
+import { LogOut } from 'lucide-react';
+import { useState } from 'react';
+
+interface LogoutButtonProps {
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
+  size?: 'default' | 'sm' | 'lg' | 'icon';
+  className?: string;
+  children?: React.ReactNode;
+}
+
+export function LogoutButton({ 
+  variant = 'outline', 
+  size = 'default', 
+  className = '', 
+  children 
+}: LogoutButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+
   const handleLogout = async () => {
-    setIsLoading(true);
     try {
-      // Sign out using Better Auth
-      const { error } = await authClient.signOut();
-      if (error) {
-        return;
-      }
-      // Show success message
-      // Redirect to signin page
-      router.push('/signin');
+      setIsLoading(true);
+      await signOut({ 
+        callbackUrl: '/auth/signin',
+        redirect: true 
+      });
     } catch (error) {
       console.error('Logout error:', error);
-      } finally {
+    } finally {
       setIsLoading(false);
     }
   };
+
   return (
     <Button
+      variant={variant}
+      size={size}
+      className={className}
       onClick={handleLogout}
       disabled={isLoading}
-      variant="outline"
-      size="sm"
-      className="logout-button"
     >
-      {isLoading ? 'Logging out...' : 'Logout'}
+      {isLoading ? (
+        <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" />
+      ) : (
+        <LogOut className="h-4 w-4 mr-2" />
+      )}
+      {children || 'Logout'}
     </Button>
   );
 }
-/**
- * SECURITY FEATURES:
- * 
- * 1. Proper session termination via Better Auth
- * 2. Loading states to prevent double clicks
- * 3. Error handling with user feedback
- * 4. Automatic redirect to signin
- * 5. Toast notifications for UX
- */

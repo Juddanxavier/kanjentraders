@@ -1,7 +1,7 @@
 /** @format */
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth/auth';
+import { getSession } from '@/lib/auth/auth-server';
 import { LeadStatus } from '@/generated/prisma';
 import { CreateLeadData, LeadFilters } from '@/types/lead';
 import { getCountryFilter, AuthUser, UserRole } from '@/lib/auth/permissions';
@@ -10,9 +10,7 @@ const isAdmin = (role: string | null | undefined) => role && ['admin', 'super_ad
 // GET /api/leads - List leads with filtering and sorting
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
+    const session = await getSession();
     if (!session?.user || !isAdmin(session.user.role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
@@ -70,9 +68,7 @@ export async function GET(request: NextRequest) {
 // POST /api/leads - Create a new lead
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
+    const session = await getSession();
     if (!session?.user || !isAdmin(session.user.role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
